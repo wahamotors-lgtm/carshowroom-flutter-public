@@ -311,6 +311,23 @@ class _TenantLoginScreenState extends State<TenantLoginScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 24),
+            // Company email
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.email_outlined, size: 16, color: Color(0xFF94A3B8)),
+                const SizedBox(width: 6),
+                Text(
+                  'info@carwhats.com',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

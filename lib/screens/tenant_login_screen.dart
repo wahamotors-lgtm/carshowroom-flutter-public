@@ -77,17 +77,20 @@ class _TenantLoginScreenState extends State<TenantLoginScreen> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                // Logo and branding
-                _buildHeader(),
-                const SizedBox(height: 32),
-                // Login form card
-                _buildLoginCard(),
-              ],
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + MediaQuery.of(context).viewInsets.bottom),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildHeader(),
+                    const SizedBox(height: 32),
+                    _buildLoginCard(),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -114,13 +117,13 @@ class _TenantLoginScreenState extends State<TenantLoginScreen> {
         children: [
           LogoHeader(iconSize: 56, fontSize: 26, textColor: Colors.white),
           SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 8,
             children: [
               _FeatureChip(icon: Icons.shield_outlined, text: 'آمن'),
-              SizedBox(width: 12),
               _FeatureChip(icon: Icons.language, text: '+30 دولة'),
-              SizedBox(width: 12),
               _FeatureChip(icon: Icons.speed, text: '99.9%'),
             ],
           ),

@@ -146,11 +146,14 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  _showOtp ? _buildOtpCard() : _buildLoginCard(),
-                ],
+              padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).viewInsets.bottom),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Column(
+                  children: [
+                    _showOtp ? _buildOtpCard() : _buildLoginCard(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -362,24 +365,28 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
           ],
 
           // OTP input
-          TextFormField(
+          LayoutBuilder(builder: (context, constraints) {
+            final isSmall = constraints.maxWidth < 300;
+            final otpFontSize = isSmall ? 22.0 : 28.0;
+            final otpSpacing = isSmall ? 8.0 : 12.0;
+            return TextFormField(
             controller: _otpController,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             maxLength: 6,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 28,
+              fontSize: otpFontSize,
               fontWeight: FontWeight.w800,
-              letterSpacing: 12,
+              letterSpacing: otpSpacing,
             ),
             decoration: InputDecoration(
               counterText: '',
               hintText: '000000',
               hintStyle: TextStyle(
                 color: Colors.white.withValues(alpha: 0.2),
-                fontSize: 28,
-                letterSpacing: 12,
+                fontSize: otpFontSize,
+                letterSpacing: otpSpacing,
               ),
               filled: true,
               fillColor: Colors.white.withValues(alpha: 0.06),
@@ -397,7 +404,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                 borderSide: const BorderSide(color: Color(0xFFF59E0B), width: 2),
               ),
             ),
-          ),
+          );
+          }),
           const SizedBox(height: 28),
 
           LoadingButton(

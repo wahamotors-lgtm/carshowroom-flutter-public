@@ -80,24 +80,29 @@ class _TenantRegisterScreenState extends State<TenantRegisterScreen> {
       body: Container(
         decoration: const BoxDecoration(gradient: AppGradients.dark),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                const LogoHeader(iconSize: 48, fontSize: 24, textColor: Colors.white),
-                const SizedBox(height: 8),
-                Text(
-                  'البرنامج المحاسبي المتكامل',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontWeight: FontWeight.w500,
-                  ),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + MediaQuery.of(context).viewInsets.bottom),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    const LogoHeader(iconSize: 48, fontSize: 24, textColor: Colors.white),
+                    const SizedBox(height: 8),
+                    Text(
+                      'البرنامج المحاسبي المتكامل',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    _buildRegisterCard(),
+                  ],
                 ),
-                const SizedBox(height: 28),
-                _buildRegisterCard(),
-              ],
+              ),
             ),
           ),
         ),

@@ -186,6 +186,7 @@ class _WebViewDashboardState extends State<WebViewDashboard> {
     final shouldExit = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'تسجيل الخروج',
@@ -201,6 +202,9 @@ class _WebViewDashboardState extends State<WebViewDashboard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
             child: const Text('لا', style: TextStyle(fontSize: 15)),
           ),
           ElevatedButton(
@@ -208,6 +212,7 @@ class _WebViewDashboardState extends State<WebViewDashboard> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),

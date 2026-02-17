@@ -278,6 +278,23 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            // Company email
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.email_outlined, size: 16, color: Colors.white.withValues(alpha: 0.4)),
+                const SizedBox(width: 6),
+                Text(
+                  'info@carwhats.com',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

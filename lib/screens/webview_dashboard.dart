@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -19,8 +20,12 @@ class _WebViewDashboardState extends State<WebViewDashboard> {
   bool _isLoading = true;
   double _progress = 0;
 
+  late final String _targetUrl;
+  late final UnmodifiableListView<UserScript> _userScripts;
+
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final token = auth.token ?? '';
     final tenantJson = auth.tenant != null ? jsonEncode(auth.tenant) : '{}';
@@ -28,38 +33,33 @@ class _WebViewDashboardState extends State<WebViewDashboard> {
     final employeeJson = auth.employee != null ? jsonEncode(auth.employee) : 'null';
     final loginType = auth.loginType;
 
-    // Determine target URL based on login type
-    final targetUrl = loginType == 'employee'
+    _targetUrl = loginType == 'employee'
         ? ApiConfig.webAppEmployeeDashboard
         : ApiConfig.webAppDashboard;
 
-    // Build injection HTML that sets localStorage then redirects
-    final injectionHtml = '''
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="background:#0F172A;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
-<div style="text-align:center;color:white;font-family:sans-serif;">
-<div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;"></div>
-<div style="font-size:14px;opacity:0.7;">جاري التحميل...</div>
-</div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-<script>
-try {
-  localStorage.setItem('authToken', '${_escapeJs(token)}');
-  localStorage.setItem('tenantInfo', '${_escapeJs(tenantJson)}');
-  localStorage.setItem('currentUser', '${_escapeJs(userJson)}');
-  ${employeeJson != 'null' ? "localStorage.setItem('loggedInEmployee', '${_escapeJs(employeeJson)}');" : ''}
-  ${loginType == 'employee' ? "localStorage.setItem('loggedInEmployee', '${_escapeJs(employeeJson)}');" : ''}
-  window.location.href = '${_escapeJs(targetUrl)}';
-} catch(e) {
-  document.body.innerHTML = '<p style="color:red;text-align:center;margin-top:40vh;">Error: ' + e.message + '</p>';
-}
-</script>
-</body>
-</html>
-''';
+    // Build localStorage injection script that runs BEFORE page JS
+    final jsSource = '''
+      try {
+        localStorage.setItem('authToken', '${_escapeJs(token)}');
+        localStorage.setItem('tenantInfo', '${_escapeJs(tenantJson)}');
+        localStorage.setItem('currentUser', '${_escapeJs(userJson)}');
+        ${employeeJson != 'null' ? "localStorage.setItem('loggedInEmployee', '${_escapeJs(employeeJson)}');" : ''}
+        ${loginType == 'employee' ? "localStorage.setItem('loggedInEmployee', '${_escapeJs(employeeJson)}');" : ''}
+      } catch(e) {
+        console.log('Auth injection error: ' + e.message);
+      }
+    ''';
 
+    _userScripts = UnmodifiableListView([
+      UserScript(
+        source: jsSource,
+        injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+      ),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -71,12 +71,10 @@ try {
           child: Stack(
             children: [
               InAppWebView(
-                initialData: InAppWebViewInitialData(
-                  data: injectionHtml,
-                  baseUrl: WebUri('https://carwhats.group/app/'),
-                  mimeType: 'text/html',
-                  encoding: 'utf-8',
+                initialUrlRequest: URLRequest(
+                  url: WebUri(_targetUrl),
                 ),
+                initialUserScripts: _userScripts,
                 initialSettings: InAppWebViewSettings(
                   javaScriptEnabled: true,
                   domStorageEnabled: true,

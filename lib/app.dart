@@ -33,6 +33,15 @@ import 'screens/store_settings_screen.dart';
 import 'screens/activity_log_screen.dart';
 import 'screens/notes_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/currencies_screen.dart';
+import 'screens/exchange_rates_screen.dart';
+import 'screens/trial_balance_screen.dart';
+import 'screens/reports_screen.dart';
+import 'screens/profits_screen.dart';
+import 'screens/smart_search_screen.dart';
+import 'screens/rental_payments_screen.dart';
+import 'screens/users_screen.dart';
+import 'screens/backup_restore_screen.dart';
 
 class CarWhatsApp extends StatelessWidget {
   const CarWhatsApp({super.key});
@@ -104,6 +113,27 @@ class CarWhatsApp extends StatelessWidget {
         AppRoutes.salaryPaymentsPage: (_) => const SalaryPaymentsScreen(),
         AppRoutes.rentalsPage: (_) => const RentalsScreen(),
         AppRoutes.billsPage: (_) => const BillsScreen(),
+
+        // Finance (continued)
+        AppRoutes.currenciesPage: (_) => const CurrenciesScreen(),
+        AppRoutes.exchangeRatesPage: (_) => const ExchangeRatesScreen(),
+        AppRoutes.trialBalance: (_) => const TrialBalanceScreen(),
+
+        // Reports
+        AppRoutes.reportsPage: (_) => const ReportsScreen(),
+        AppRoutes.profitsPage: (_) => const ProfitsScreen(),
+
+        // Smart Search
+        AppRoutes.smartSearchPage: (_) => const SmartSearchScreen(),
+
+        // Rental Payments
+        AppRoutes.rentalPaymentsPage: (_) => const RentalPaymentsScreen(),
+
+        // Users
+        AppRoutes.usersPage: (_) => const UsersScreen(),
+
+        // Backup & Restore
+        AppRoutes.backupRestorePage: (_) => const BackupRestoreScreen(),
 
         // Settings & System
         AppRoutes.companySettingsPage: (_) => const CompanySettingsScreen(),

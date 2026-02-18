@@ -78,6 +78,26 @@ class ApiConfig {
   // Smart Search
   static const String smartSearch = '$apiBase/smart-search';
 
+  // Currencies & Exchange Rates
+  static const String currencies = '$apiBase/currencies';
+  static const String exchangeRateHistory = '$apiBase/exchange-rate-history';
+
+  // Users
+  static const String users = '$apiBase/users';
+
+  // Backup & Restore
+  static const String backupFull = '$apiBase/backup/full';
+  static const String restoreFull = '$apiBase/restore/full';
+
+  // Dashboard Stats
+  static const String dashboardStats = '$apiBase/dashboard/stats';
+
+  // Car Brands
+  static const String carBrands = '$apiBase/car-brands';
+
+  // Employee Activity Logs
+  static const String employeeActivityLogs = '$apiBase/employee-activity-logs';
+
   // WebView (legacy)
   static const String webAppUrl = '$baseUrl/app/';
   static const String webAppDashboard = '$baseUrl/app/#/dashboard';

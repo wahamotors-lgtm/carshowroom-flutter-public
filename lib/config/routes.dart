@@ -11,6 +11,13 @@ class AppRoutes {
   static const String journalEntries = '/journal-entries';
   static const String expenseRecord = '/expense-record';
   static const String paymentsPage = '/payments';
+  static const String trialBalance = '/trial-balance';
+  static const String currenciesPage = '/currencies';
+  static const String exchangeRatesPage = '/exchange-rates';
+
+  // Reports
+  static const String reportsPage = '/reports';
+  static const String profitsPage = '/profits';
 
   // Inventory
   static const String cars = '/cars';
@@ -34,6 +41,7 @@ class AppRoutes {
   static const String employeesPage = '/employees';
   static const String salaryPaymentsPage = '/salary-payments';
   static const String rentalsPage = '/rentals';
+  static const String rentalPaymentsPage = '/rental-payments';
   static const String billsPage = '/bills';
 
   // Settings & System
@@ -42,4 +50,7 @@ class AppRoutes {
   static const String settingsPage = '/settings-page';
   static const String activityLogPage = '/activity-log';
   static const String notesPage = '/notes';
+  static const String usersPage = '/users';
+  static const String backupRestorePage = '/backup-restore';
+  static const String smartSearchPage = '/smart-search';
 }

@@ -233,4 +233,76 @@ class DataService {
 
   Future<Map<String, dynamic>> deleteNote(String token, String id) =>
       _api.delete('${ApiConfig.notes}/$id', token: token);
+
+  // ── Currencies ──
+
+  Future<List<Map<String, dynamic>>> getCurrencies(String token) =>
+      _getList(ApiConfig.currencies, token);
+
+  Future<Map<String, dynamic>> createCurrency(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.currencies, body, token: token);
+
+  Future<Map<String, dynamic>> updateCurrency(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.currencies}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteCurrency(String token, String id) =>
+      _api.delete('${ApiConfig.currencies}/$id', token: token);
+
+  // ── Exchange Rates ──
+
+  Future<List<Map<String, dynamic>>> getExchangeRateHistory(String token) =>
+      _getList(ApiConfig.exchangeRateHistory, token);
+
+  Future<Map<String, dynamic>> createExchangeRate(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.exchangeRateHistory, body, token: token);
+
+  // ── Users ──
+
+  Future<List<Map<String, dynamic>>> getUsers(String token) =>
+      _getList(ApiConfig.users, token);
+
+  Future<Map<String, dynamic>> createUser(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.users, body, token: token);
+
+  Future<Map<String, dynamic>> updateUser(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.users}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteUser(String token, String id) =>
+      _api.delete('${ApiConfig.users}/$id', token: token);
+
+  // ── Rental Payments ──
+
+  Future<List<Map<String, dynamic>>> getRentalPayments(String token) =>
+      _getList(ApiConfig.rentalPayments, token);
+
+  Future<Map<String, dynamic>> createRentalPayment(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.rentalPayments, body, token: token);
+
+  // ── Backup & Restore ──
+
+  Future<Map<String, dynamic>> getBackup(String token) =>
+      _api.get(ApiConfig.backupFull, token: token);
+
+  Future<Map<String, dynamic>> restoreBackup(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.restoreFull, body, token: token);
+
+  // ── Dashboard Stats ──
+
+  Future<Map<String, dynamic>> getDashboardStats(String token) =>
+      _api.get(ApiConfig.dashboardStats, token: token);
+
+  // ── Smart Search ──
+
+  Future<Map<String, dynamic>> smartSearch(String token, String query) =>
+      _api.get('${ApiConfig.smartSearch}?q=$query', token: token);
+
+  // ── Customer Accounts ──
+
+  Future<List<Map<String, dynamic>>> getCustomerAccounts(String token) =>
+      _getList(ApiConfig.customerAccounts, token);
+
+  // ── Consignment Sales ──
+
+  Future<List<Map<String, dynamic>>> getConsignmentSales(String token) =>
+      _getList(ApiConfig.consignmentSales, token);
 }

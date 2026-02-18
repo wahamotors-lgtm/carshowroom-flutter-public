@@ -46,7 +46,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       if (!mounted) return;
       setState(() => _isCreatingBackup = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('فشل إنشاء النسخة الاحتياطية'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(e is ApiException ? e.message : 'فشل إنشاء النسخة الاحتياطية'), backgroundColor: AppColors.error),
       );
     }
   }
@@ -70,7 +70,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       if (!mounted) return;
       setState(() => _isRestoring = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('فشل استعادة البيانات'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(e is ApiException ? e.message : 'فشل استعادة البيانات'), backgroundColor: AppColors.error),
       );
     }
   }

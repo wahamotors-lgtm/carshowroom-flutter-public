@@ -43,7 +43,7 @@ class _SalesScreenState extends State<SalesScreen> {
       setState(() { _sales = data; _applyFilter(); _isLoading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل المبيعات'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل المبيعات'; _isLoading = false; });
     }
   }
 
@@ -245,7 +245,7 @@ class _SalesScreenState extends State<SalesScreen> {
             _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة عملية البيع'), backgroundColor: AppColors.success));
           } catch (e) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة عملية البيع'), backgroundColor: AppColors.error));
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة عملية البيع'), backgroundColor: AppColors.error));
           }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700))),
@@ -302,7 +302,7 @@ class _SalesScreenState extends State<SalesScreen> {
             _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تعديل عملية البيع'), backgroundColor: AppColors.success));
           } catch (e) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل تعديل عملية البيع'), backgroundColor: AppColors.error));
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل تعديل عملية البيع'), backgroundColor: AppColors.error));
           }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حفظ', style: TextStyle(fontWeight: FontWeight.w700))),
@@ -326,7 +326,7 @@ class _SalesScreenState extends State<SalesScreen> {
             _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حذف عملية البيع'), backgroundColor: AppColors.success));
           } catch (e) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل حذف عملية البيع'), backgroundColor: AppColors.error));
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل حذف عملية البيع'), backgroundColor: AppColors.error));
           }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حذف', style: TextStyle(fontWeight: FontWeight.w700))),

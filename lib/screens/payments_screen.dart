@@ -29,7 +29,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       final data = await _ds.getPayments(_token);
       if (!mounted) return;
       setState(() { _payments = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل المدفوعات'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل المدفوعات'; _isLoading = false; }); }
   }
 
   @override
@@ -142,7 +142,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               });
               _load();
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة الدفعة'), backgroundColor: AppColors.error));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة الدفعة'), backgroundColor: AppColors.error));
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),

@@ -29,7 +29,7 @@ class _SalaryPaymentsScreenState extends State<SalaryPaymentsScreen> {
       final data = await _ds.getSalaryPayments(_token);
       if (!mounted) return;
       setState(() { _payments = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل مدفوعات الرواتب'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل مدفوعات الرواتب'; _isLoading = false; }); }
   }
 
   @override

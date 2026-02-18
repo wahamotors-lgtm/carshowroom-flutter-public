@@ -42,7 +42,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       setState(() { _customers = data; _applyFilter(); _isLoading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل العملاء'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل العملاء'; _isLoading = false; });
     }
   }
 
@@ -205,7 +205,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               await _dataService.createCustomer(_token, { 'name': nameC.text.trim(), if (phoneC.text.trim().isNotEmpty) 'phone': phoneC.text.trim(), if (emailC.text.trim().isNotEmpty) 'email': emailC.text.trim() });
               _loadData();
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة العميل'), backgroundColor: AppColors.success));
-            } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة العميل'), backgroundColor: AppColors.error)); }
+            } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة العميل'), backgroundColor: AppColors.error)); }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('إضافة'),

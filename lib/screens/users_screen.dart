@@ -42,7 +42,7 @@ class _UsersScreenState extends State<UsersScreen> {
       setState(() { _users = users; _applyFilter(); _isLoading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل المستخدمين'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل المستخدمين'; _isLoading = false; });
     }
   }
 
@@ -204,7 +204,7 @@ class _UsersScreenState extends State<UsersScreen> {
           if (usernameC.text.trim().isEmpty || emailC.text.trim().isEmpty || passwordC.text.trim().isEmpty) return; Navigator.pop(ctx);
           try { await _ds.createUser(_token, {'username': usernameC.text.trim(), 'email': emailC.text.trim(), 'password': passwordC.text.trim(), 'full_name': fullNameC.text.trim(), 'role': role, 'is_active': true}); _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة المستخدم'), backgroundColor: AppColors.success));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الإضافة'), backgroundColor: AppColors.error)); }
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الإضافة'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700))),
       ],
@@ -245,7 +245,7 @@ class _UsersScreenState extends State<UsersScreen> {
         ElevatedButton(onPressed: () async { Navigator.pop(ctx);
           try { await _ds.updateUser(_token, id.toString(), {'username': usernameC.text.trim(), 'email': emailC.text.trim(), 'full_name': fullNameC.text.trim(), 'role': role, 'is_active': isActive}); _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم التعديل'), backgroundColor: AppColors.success));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل التعديل'), backgroundColor: AppColors.error)); }
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل التعديل'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حفظ', style: TextStyle(fontWeight: FontWeight.w700))),
       ],
@@ -262,7 +262,7 @@ class _UsersScreenState extends State<UsersScreen> {
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
         ElevatedButton(onPressed: () async { Navigator.pop(ctx);
           try { await _ds.deleteUser(_token, id); _loadData(); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحذف'), backgroundColor: AppColors.success)); }
-          catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الحذف'), backgroundColor: AppColors.error)); }
+          catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الحذف'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حذف', style: TextStyle(fontWeight: FontWeight.w700))),
       ],

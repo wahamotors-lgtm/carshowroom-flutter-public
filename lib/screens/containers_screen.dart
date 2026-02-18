@@ -29,7 +29,7 @@ class _ContainersScreenState extends State<ContainersScreen> {
       final data = await _ds.getContainers(_token);
       if (!mounted) return;
       setState(() { _containers = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل الحاويات'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الحاويات'; _isLoading = false; }); }
   }
 
   @override
@@ -162,7 +162,7 @@ class _ContainersScreenState extends State<ContainersScreen> {
             });
             _load();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة الحاوية'), backgroundColor: AppColors.success));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الإضافة'), backgroundColor: AppColors.error)); }
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الإضافة'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700))),
       ],
@@ -218,7 +218,7 @@ class _ContainersScreenState extends State<ContainersScreen> {
             });
             _load();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم التعديل'), backgroundColor: AppColors.success));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل التعديل'), backgroundColor: AppColors.error)); }
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل التعديل'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حفظ', style: TextStyle(fontWeight: FontWeight.w700))),
       ],
@@ -237,7 +237,7 @@ class _ContainersScreenState extends State<ContainersScreen> {
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
         ElevatedButton(onPressed: () async { Navigator.pop(ctx);
           try { await _ds.deleteContainer(_token, id); _load(); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحذف'), backgroundColor: AppColors.success)); }
-          catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الحذف'), backgroundColor: AppColors.error)); }
+          catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الحذف'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حذف', style: TextStyle(fontWeight: FontWeight.w700))),
       ],

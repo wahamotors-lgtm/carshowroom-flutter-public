@@ -29,7 +29,7 @@ class _WarehousesScreenState extends State<WarehousesScreen> {
       final data = await _ds.getWarehouses(_token);
       if (!mounted) return;
       setState(() { _warehouses = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل المستودعات'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل المستودعات'; _isLoading = false; }); }
   }
 
   @override

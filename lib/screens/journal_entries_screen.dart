@@ -55,7 +55,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'فشل تحميل القيود';
+        _error = e is ApiException ? e.message : 'فشل تحميل القيود';
         _isLoading = false;
       });
     }
@@ -554,7 +554,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('فشل إضافة القيد'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة القيد'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -588,7 +588,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('فشل حذف القيد'), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(e is ApiException ? e.message : 'فشل حذف القيد'), backgroundColor: AppColors.error),
                   );
                 }
               }

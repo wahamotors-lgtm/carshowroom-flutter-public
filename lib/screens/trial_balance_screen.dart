@@ -54,7 +54,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'فشل تحميل ميزان المراجعة';
+        _error = e is ApiException ? e.message : 'فشل تحميل ميزان المراجعة';
         _isLoading = false;
       });
     }

@@ -42,7 +42,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
       setState(() { _rates = rates; _applyFilter(); _isLoading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل أسعار الصرف'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل أسعار الصرف'; _isLoading = false; });
     }
   }
 
@@ -180,7 +180,7 @@ class _ExchangeRatesScreenState extends State<ExchangeRatesScreen> {
           if (codeC.text.trim().isEmpty || rateC.text.trim().isEmpty) return; Navigator.pop(ctx);
           try { await _ds.createExchangeRate(_token, {'currency_code': codeC.text.trim(), 'rate': double.tryParse(rateC.text.trim()) ?? 0, 'date': dateC.text.trim()}); _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة سعر الصرف'), backgroundColor: AppColors.success));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الإضافة'), backgroundColor: AppColors.error)); }
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الإضافة'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700))),
       ],

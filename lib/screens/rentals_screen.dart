@@ -31,7 +31,7 @@ class _RentalsScreenState extends State<RentalsScreen> {
       final data = await _ds.getRentals(_token);
       if (!mounted) return;
       setState(() { _rentals = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل الإيجارات'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الإيجارات'; _isLoading = false; }); }
   }
 
   @override
@@ -191,7 +191,7 @@ class _RentalsScreenState extends State<RentalsScreen> {
               _load();
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة الإيجار بنجاح'), backgroundColor: AppColors.success));
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة الإيجار'), backgroundColor: AppColors.error));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة الإيجار'), backgroundColor: AppColors.error));
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -269,7 +269,7 @@ class _RentalsScreenState extends State<RentalsScreen> {
               _load();
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تعديل الإيجار بنجاح'), backgroundColor: AppColors.success));
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل تعديل الإيجار'), backgroundColor: AppColors.error));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل تعديل الإيجار'), backgroundColor: AppColors.error));
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -296,7 +296,7 @@ class _RentalsScreenState extends State<RentalsScreen> {
             _load();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حذف الإيجار'), backgroundColor: AppColors.success));
           } catch (e) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل حذف الإيجار'), backgroundColor: AppColors.error));
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل حذف الإيجار'), backgroundColor: AppColors.error));
           }
         },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))), child: const Text('حذف')),

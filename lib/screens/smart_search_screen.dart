@@ -58,7 +58,7 @@ class _SmartSearchScreenState extends State<SmartSearchScreen> {
     } catch (e) {
       if (!mounted) return;
       if (_lastSearchTime != searchTime) return;
-      setState(() { _error = 'فشل البحث، حاول مرة أخرى'; _isLoading = false; _hasSearched = true; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل البحث، حاول مرة أخرى'; _isLoading = false; _hasSearched = true; });
     }
   }
 

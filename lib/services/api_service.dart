@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
@@ -44,13 +45,24 @@ class ApiService {
     String url, {
     String? token,
   }) async {
+    debugPrint('API GET: $url');
     final response = await _client.get(
       Uri.parse(url),
       headers: _headers(token: token),
     );
 
+    debugPrint('API GET $url -> ${response.statusCode}');
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) return decoded;
+      // Handle endpoints that return an array (e.g. company-settings)
+      if (decoded is List) {
+        if (decoded.isNotEmpty && decoded.first is Map) {
+          return Map<String, dynamic>.from(decoded.first);
+        }
+        return {'data': decoded};
+      }
+      return {'data': decoded};
     }
 
     try {
@@ -69,20 +81,29 @@ class ApiService {
     String url, {
     String? token,
   }) async {
+    debugPrint('API GET_LIST: $url');
     final response = await _client.get(
       Uri.parse(url),
       headers: _headers(token: token),
     );
 
+    debugPrint('API GET_LIST $url -> ${response.statusCode}');
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final decoded = jsonDecode(response.body);
-      if (decoded is List) return decoded;
-      if (decoded is Map && decoded.containsKey('data')) {
-        return decoded['data'] as List;
+      if (decoded is List) {
+        debugPrint('API GET_LIST $url -> List(${decoded.length} items)');
+        return decoded;
       }
+      if (decoded is Map && decoded.containsKey('data')) {
+        final data = decoded['data'] as List;
+        debugPrint('API GET_LIST $url -> Map.data(${data.length} items)');
+        return data;
+      }
+      debugPrint('API GET_LIST $url -> unexpected format: ${decoded.runtimeType}');
       return [];
     }
 
+    debugPrint('API GET_LIST $url -> error: ${response.body.substring(0, response.body.length.clamp(0, 200))}');
     return [];
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../config/routes.dart';
@@ -48,13 +49,20 @@ class _AccountsScreenState extends State<AccountsScreen> {
 
     try {
       final accounts = await _accountService.getAccounts(_token);
+      debugPrint('Accounts loaded: ${accounts.length}');
+      for (final a in accounts.take(3)) {
+        debugPrint('  Account: id=${a.id}, name=${a.name}, parentId=${a.parentId}, type=${a.type}');
+      }
       if (!mounted) return;
       setState(() {
         _accounts = accounts;
         _applyFilter();
         _isLoading = false;
       });
-    } catch (e) {
+      debugPrint('Root accounts: ${_rootAccounts.length}, filtered: ${_filteredAccounts.length}');
+    } catch (e, st) {
+      debugPrint('Accounts error: $e');
+      debugPrint('Stack: $st');
       if (!mounted) return;
       setState(() {
         _error = 'فشل تحميل الحسابات';

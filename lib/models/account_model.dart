@@ -24,12 +24,19 @@ class AccountModel {
       id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       name: json['name'] ?? '',
       type: json['type'] ?? 'other',
-      balance: (json['balance'] ?? 0).toDouble(),
+      balance: _parseDouble(json['balance']),
       currency: json['currency'],
       parentId: json['parent_id']?.toString() ?? json['parentId']?.toString(),
       isSystemAccount: json['is_system_account'] ?? json['isSystemAccount'] ?? false,
       createdAt: json['created_at'] ?? json['createdAt'],
     );
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
   }
 
   Map<String, dynamic> toJson() {

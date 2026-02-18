@@ -41,7 +41,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       setState(() { _employees = data; _applyFilter(); _isLoading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل الموظفين'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الموظفين'; _isLoading = false; });
     }
   }
 
@@ -269,7 +269,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة الموظف'), backgroundColor: AppColors.error));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة الموظف'), backgroundColor: AppColors.error));
                 }
               }
             },
@@ -370,7 +370,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل تعديل الموظف'), backgroundColor: AppColors.error));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل تعديل الموظف'), backgroundColor: AppColors.error));
                 }
               }
             },
@@ -403,7 +403,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
               }
             } catch (e) {
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل حذف الموظف'), backgroundColor: AppColors.error));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل حذف الموظف'), backgroundColor: AppColors.error));
               }
             }
           },

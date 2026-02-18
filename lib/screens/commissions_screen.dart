@@ -29,7 +29,7 @@ class _CommissionsScreenState extends State<CommissionsScreen> {
       final data = await _ds.getCommissions(_token);
       if (!mounted) return;
       setState(() { _commissions = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل العمولات'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل العمولات'; _isLoading = false; }); }
   }
 
   @override

@@ -44,7 +44,7 @@ class _ProfitsScreenState extends State<ProfitsScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل البيانات'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل البيانات'; _isLoading = false; });
     }
   }
 

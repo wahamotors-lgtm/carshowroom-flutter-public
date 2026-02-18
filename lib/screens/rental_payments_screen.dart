@@ -42,7 +42,7 @@ class _RentalPaymentsScreenState extends State<RentalPaymentsScreen> {
       setState(() { _payments = payments; _applyFilter(); _isLoading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل دفعات الإيجار'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل دفعات الإيجار'; _isLoading = false; });
     }
   }
 
@@ -241,7 +241,7 @@ class _RentalPaymentsScreenState extends State<RentalPaymentsScreen> {
           try { await _ds.createRentalPayment(_token, {'rental_id': int.tryParse(rentalIdC.text.trim()) ?? 0, 'amount': double.tryParse(amountC.text.trim()) ?? 0,
             'payment_date': paymentDateC.text.trim(), 'payment_method': paymentMethod, 'notes': notesC.text.trim()}); _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة الدفعة'), backgroundColor: AppColors.success));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الإضافة'), backgroundColor: AppColors.error)); }
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الإضافة'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700))),
       ],

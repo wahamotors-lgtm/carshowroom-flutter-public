@@ -29,7 +29,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
       final data = await _ds.getShipments(_token);
       if (!mounted) return;
       setState(() { _shipments = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل الشحنات'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الشحنات'; _isLoading = false; }); }
   }
 
   @override
@@ -180,7 +180,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
               });
               _load();
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة الشحنة'), backgroundColor: AppColors.error));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة الشحنة'), backgroundColor: AppColors.error));
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -210,7 +210,7 @@ class _ShipmentsScreenState extends State<ShipmentsScreen> {
           onPressed: () async {
             Navigator.pop(ctx);
             try { await _ds.deleteShipment(_token, id); _load(); }
-            catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الحذف'), backgroundColor: AppColors.error)); }
+            catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الحذف'), backgroundColor: AppColors.error)); }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حذف', style: TextStyle(fontWeight: FontWeight.w700)),

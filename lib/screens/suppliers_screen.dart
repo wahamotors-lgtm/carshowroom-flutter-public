@@ -42,7 +42,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
       setState(() { _suppliers = data; _applyFilter(); _isLoading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل الموردين'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الموردين'; _isLoading = false; });
     }
   }
 
@@ -216,7 +216,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
               _loadData();
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة المورد بنجاح'), backgroundColor: AppColors.success));
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة المورد'), backgroundColor: AppColors.error));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة المورد'), backgroundColor: AppColors.error));
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -271,7 +271,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
               _loadData();
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تعديل المورد بنجاح'), backgroundColor: AppColors.success));
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل تعديل المورد'), backgroundColor: AppColors.error));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل تعديل المورد'), backgroundColor: AppColors.error));
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -296,7 +296,7 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
             _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حذف المورد'), backgroundColor: AppColors.success));
           } catch (e) {
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل حذف المورد'), backgroundColor: AppColors.error));
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل حذف المورد'), backgroundColor: AppColors.error));
           }
         },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))), child: const Text('حذف')),

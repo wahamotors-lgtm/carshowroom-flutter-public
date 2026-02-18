@@ -42,7 +42,7 @@ class _CarsScreenState extends State<CarsScreen> {
       setState(() { _cars = cars; _applyFilter(); _isLoading = false; });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل السيارات'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل السيارات'; _isLoading = false; });
     }
   }
 
@@ -192,7 +192,7 @@ class _CarsScreenState extends State<CarsScreen> {
           try { await _ds.createCar(_token, {'make': makeC.text.trim(), 'model': modelC.text.trim(), 'year': yearC.text.trim(), 'color': colorC.text.trim(), 'vin': vinC.text.trim(), 'status': status,
             'selling_price': double.tryParse(priceC.text.trim()) ?? 0, 'purchase_price': double.tryParse(purchaseC.text.trim()) ?? 0}); _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة السيارة'), backgroundColor: AppColors.success));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الإضافة'), backgroundColor: AppColors.error)); }
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الإضافة'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700))),
       ],
@@ -230,7 +230,7 @@ class _CarsScreenState extends State<CarsScreen> {
           try { await _ds.updateCar(_token, id, {'make': makeC.text.trim(), 'model': modelC.text.trim(), 'year': yearC.text.trim(), 'color': colorC.text.trim(), 'vin': vinC.text.trim(), 'status': status,
             'selling_price': double.tryParse(priceC.text.trim()) ?? 0, 'purchase_price': double.tryParse(purchaseC.text.trim()) ?? 0}); _loadData();
             if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم التعديل'), backgroundColor: AppColors.success));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل التعديل'), backgroundColor: AppColors.error)); }
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل التعديل'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حفظ', style: TextStyle(fontWeight: FontWeight.w700))),
       ],
@@ -247,7 +247,7 @@ class _CarsScreenState extends State<CarsScreen> {
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
         ElevatedButton(onPressed: () async { Navigator.pop(ctx);
           try { await _ds.deleteCar(_token, id); _loadData(); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحذف'), backgroundColor: AppColors.success)); }
-          catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل الحذف'), backgroundColor: AppColors.error)); }
+          catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل الحذف'), backgroundColor: AppColors.error)); }
         }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حذف', style: TextStyle(fontWeight: FontWeight.w700))),
       ],

@@ -57,7 +57,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'فشل تحميل الحسابات';
+        _error = e is ApiException ? e.message : 'فشل تحميل الحسابات';
         _isLoading = false;
       });
     }
@@ -759,7 +759,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('فشل إضافة الحساب'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة الحساب'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -780,7 +780,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('فشل تعديل الحساب'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(e is ApiException ? e.message : 'فشل تعديل الحساب'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -798,7 +798,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('فشل حذف الحساب'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(e is ApiException ? e.message : 'فشل حذف الحساب'), backgroundColor: AppColors.error),
         );
       }
     }

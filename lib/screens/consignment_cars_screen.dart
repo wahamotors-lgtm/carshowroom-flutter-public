@@ -29,7 +29,7 @@ class _ConsignmentCarsScreenState extends State<ConsignmentCarsScreen> {
       final data = await _ds.getConsignmentCars(_token);
       if (!mounted) return;
       setState(() { _cars = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل سيارات الأمانة'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل سيارات الأمانة'; _isLoading = false; }); }
   }
 
   @override

@@ -29,7 +29,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       final data = await _ds.getActivityLogs(_token);
       if (!mounted) return;
       setState(() { _logs = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل سجل النشاط'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل سجل النشاط'; _isLoading = false; }); }
   }
 
   @override

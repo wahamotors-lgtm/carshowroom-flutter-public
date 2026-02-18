@@ -29,7 +29,7 @@ class _DeliveriesScreenState extends State<DeliveriesScreen> {
       final data = await _ds.getDeliveries(_token);
       if (!mounted) return;
       setState(() { _deliveries = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل التسليمات'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل التسليمات'; _isLoading = false; }); }
   }
 
   @override

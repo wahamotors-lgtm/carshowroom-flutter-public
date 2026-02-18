@@ -29,7 +29,7 @@ class _AirFlightsScreenState extends State<AirFlightsScreen> {
       final data = await _api.getList(ApiConfig.airFlights, token: _token);
       if (!mounted) return;
       setState(() { _flights = data.cast<Map<String, dynamic>>(); _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل الرحلات الجوية'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الرحلات الجوية'; _isLoading = false; }); }
   }
 
   @override
@@ -176,7 +176,7 @@ class _AirFlightsScreenState extends State<AirFlightsScreen> {
               }, token: _token);
               _load();
             } catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة الرحلة'), backgroundColor: AppColors.error));
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة الرحلة'), backgroundColor: AppColors.error));
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),

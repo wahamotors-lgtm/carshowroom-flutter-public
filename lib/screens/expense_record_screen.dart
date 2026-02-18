@@ -50,7 +50,7 @@ class _ExpenseRecordScreenState extends State<ExpenseRecordScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل البيانات'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل البيانات'; _isLoading = false; });
     }
   }
 
@@ -223,7 +223,7 @@ class _ExpenseRecordScreenState extends State<ExpenseRecordScreen> {
                   _loadData();
                   if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل المصروف'), backgroundColor: AppColors.success));
                 } catch (e) {
-                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل تسجيل المصروف'), backgroundColor: AppColors.error));
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل تسجيل المصروف'), backgroundColor: AppColors.error));
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),

@@ -29,7 +29,7 @@ class _StoreSettingsScreenState extends State<StoreSettingsScreen> {
       final data = await _ds.getStoreSettings(_token);
       if (!mounted) return;
       setState(() { _settings = data; _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل إعدادات المتجر'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل إعدادات المتجر'; _isLoading = false; }); }
   }
 
   @override

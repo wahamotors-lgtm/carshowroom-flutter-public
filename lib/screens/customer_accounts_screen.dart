@@ -29,7 +29,7 @@ class _CustomerAccountsScreenState extends State<CustomerAccountsScreen> {
       final data = await _api.getList(ApiConfig.customerAccounts, token: _token);
       if (!mounted) return;
       setState(() { _accounts = data.cast<Map<String, dynamic>>(); _isLoading = false; });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل حسابات العملاء'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل حسابات العملاء'; _isLoading = false; }); }
   }
 
   @override

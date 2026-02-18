@@ -44,7 +44,7 @@ class _BillsScreenState extends State<BillsScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'فشل تحميل الفواتير'; _isLoading = false; });
+      setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الفواتير'; _isLoading = false; });
     }
   }
 
@@ -297,7 +297,7 @@ class _BillsScreenState extends State<BillsScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل إضافة الفاتورة'), backgroundColor: AppColors.error));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة الفاتورة'), backgroundColor: AppColors.error));
                 }
               }
             },
@@ -443,7 +443,7 @@ class _BillsScreenState extends State<BillsScreen> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل تعديل الفاتورة'), backgroundColor: AppColors.error));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل تعديل الفاتورة'), backgroundColor: AppColors.error));
                 }
               }
             },
@@ -476,7 +476,7 @@ class _BillsScreenState extends State<BillsScreen> {
               }
             } catch (e) {
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل دفع الفاتورة'), backgroundColor: AppColors.error));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل دفع الفاتورة'), backgroundColor: AppColors.error));
               }
             }
           },
@@ -508,7 +508,7 @@ class _BillsScreenState extends State<BillsScreen> {
               }
             } catch (e) {
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل حذف الفاتورة'), backgroundColor: AppColors.error));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل حذف الفاتورة'), backgroundColor: AppColors.error));
               }
             }
           },

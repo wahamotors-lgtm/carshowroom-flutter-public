@@ -52,7 +52,7 @@ class _CompanySettingsScreenState extends State<CompanySettingsScreen> {
         _descriptionC.text = data['description'] ?? '';
         _isLoading = false;
       });
-    } catch (e) { if (!mounted) return; setState(() { _error = 'فشل تحميل الإعدادات'; _isLoading = false; }); }
+    } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الإعدادات'; _isLoading = false; }); }
   }
 
   Future<void> _save() async {
@@ -67,7 +67,7 @@ class _CompanySettingsScreenState extends State<CompanySettingsScreen> {
       });
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حفظ الإعدادات'), backgroundColor: AppColors.success));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('فشل حفظ الإعدادات'), backgroundColor: AppColors.error));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل حفظ الإعدادات'), backgroundColor: AppColors.error));
     }
     if (mounted) setState(() => _isSaving = false);
   }

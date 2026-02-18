@@ -7,7 +7,32 @@ import 'screens/tenant_login_screen.dart';
 import 'screens/tenant_register_screen.dart';
 import 'screens/activation_screen.dart';
 import 'screens/employee_login_screen.dart';
-import 'screens/webview_dashboard.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/accounts_screen.dart';
+import 'screens/journal_entries_screen.dart';
+import 'screens/expense_record_screen.dart';
+import 'screens/payments_screen.dart';
+import 'screens/cars_screen.dart';
+import 'screens/consignment_cars_screen.dart';
+import 'screens/sales_screen.dart';
+import 'screens/commissions_screen.dart';
+import 'screens/customers_screen.dart';
+import 'screens/customer_accounts_screen.dart';
+import 'screens/suppliers_screen.dart';
+import 'screens/warehouses_screen.dart';
+import 'screens/containers_screen.dart';
+import 'screens/shipments_screen.dart';
+import 'screens/deliveries_screen.dart';
+import 'screens/air_flights_screen.dart';
+import 'screens/employees_screen.dart';
+import 'screens/salary_payments_screen.dart';
+import 'screens/rentals_screen.dart';
+import 'screens/bills_screen.dart';
+import 'screens/company_settings_screen.dart';
+import 'screens/store_settings_screen.dart';
+import 'screens/activity_log_screen.dart';
+import 'screens/notes_screen.dart';
+import 'screens/settings_screen.dart';
 
 class CarWhatsApp extends StatelessWidget {
   const CarWhatsApp({super.key});
@@ -17,7 +42,6 @@ class CarWhatsApp extends StatelessWidget {
     return MaterialApp(
       title: 'كارواتس',
       debugShowCheckedModeBanner: false,
-      // RTL Arabic
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -41,12 +65,52 @@ class CarWhatsApp extends StatelessWidget {
       ),
       initialRoute: AppRoutes.splash,
       routes: {
+        // Auth
         AppRoutes.splash: (_) => const SplashScreen(),
         AppRoutes.tenantLogin: (_) => const TenantLoginScreen(),
         AppRoutes.tenantRegister: (_) => const TenantRegisterScreen(),
         AppRoutes.activation: (_) => const ActivationScreen(),
         AppRoutes.employeeLogin: (_) => const EmployeeLoginScreen(),
-        AppRoutes.dashboard: (_) => const WebViewDashboard(),
+
+        // Dashboard
+        AppRoutes.dashboard: (_) => const DashboardScreen(),
+
+        // Finance & Accounting
+        AppRoutes.accounts: (_) => const AccountsScreen(),
+        AppRoutes.journalEntries: (_) => const JournalEntriesScreen(),
+        AppRoutes.expenseRecord: (_) => const ExpenseRecordScreen(),
+        AppRoutes.paymentsPage: (_) => const PaymentsScreen(),
+
+        // Inventory
+        AppRoutes.cars: (_) => const CarsScreen(),
+        AppRoutes.consignmentCarsPage: (_) => const ConsignmentCarsScreen(),
+        AppRoutes.warehousesPage: (_) => const WarehousesScreen(),
+
+        // Sales & Customers
+        AppRoutes.salesPage: (_) => const SalesScreen(),
+        AppRoutes.commissionsPage: (_) => const CommissionsScreen(),
+        AppRoutes.customersPage: (_) => const CustomersScreen(),
+        AppRoutes.customerAccountsPage: (_) => const CustomerAccountsScreen(),
+
+        // Procurement & Shipping
+        AppRoutes.suppliersPage: (_) => const SuppliersScreen(),
+        AppRoutes.containersPage: (_) => const ContainersScreen(),
+        AppRoutes.shipmentsPage: (_) => const ShipmentsScreen(),
+        AppRoutes.deliveriesPage: (_) => const DeliveriesScreen(),
+        AppRoutes.airFlightsPage: (_) => const AirFlightsScreen(),
+
+        // HR
+        AppRoutes.employeesPage: (_) => const EmployeesScreen(),
+        AppRoutes.salaryPaymentsPage: (_) => const SalaryPaymentsScreen(),
+        AppRoutes.rentalsPage: (_) => const RentalsScreen(),
+        AppRoutes.billsPage: (_) => const BillsScreen(),
+
+        // Settings & System
+        AppRoutes.companySettingsPage: (_) => const CompanySettingsScreen(),
+        AppRoutes.storeSettingsPage: (_) => const StoreSettingsScreen(),
+        AppRoutes.activityLogPage: (_) => const ActivityLogScreen(),
+        AppRoutes.notesPage: (_) => const NotesScreen(),
+        AppRoutes.settingsPage: (_) => const SettingsScreen(),
       },
     );
   }

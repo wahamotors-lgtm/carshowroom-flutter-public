@@ -34,6 +34,9 @@ class DataService {
   Future<Map<String, dynamic>> createConsignmentCar(String token, Map<String, dynamic> body) =>
       _api.post(ApiConfig.consignmentCars, body, token: token);
 
+  Future<Map<String, dynamic>> updateConsignmentCar(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.consignmentCars}/$id', body, token: token);
+
   Future<Map<String, dynamic>> deleteConsignmentCar(String token, String id) =>
       _api.delete('${ApiConfig.consignmentCars}/$id', token: token);
 
@@ -141,6 +144,15 @@ class DataService {
 
   Future<List<Map<String, dynamic>>> getDeliveries(String token) =>
       _getList(ApiConfig.deliveries, token);
+
+  Future<Map<String, dynamic>> createDelivery(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.deliveries, body, token: token);
+
+  Future<Map<String, dynamic>> updateDelivery(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.deliveries}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteDelivery(String token, String id) =>
+      _api.delete('${ApiConfig.deliveries}/$id', token: token);
 
   // ── Warehouses ──
 
@@ -305,4 +317,286 @@ class DataService {
 
   Future<List<Map<String, dynamic>>> getConsignmentSales(String token) =>
       _getList(ApiConfig.consignmentSales, token);
+
+  Future<Map<String, dynamic>> createConsignmentSale(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.consignmentSales, body, token: token);
+
+  // ── Sales Commissions ──
+
+  Future<List<Map<String, dynamic>>> getSalesCommissions(String token) =>
+      _getList(ApiConfig.salesCommissions, token);
+
+  Future<Map<String, dynamic>> createSalesCommission(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.salesCommissions, body, token: token);
+
+  // ── Payments (update/delete) ──
+
+  Future<Map<String, dynamic>> updatePayment(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.payments}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deletePayment(String token, String id) =>
+      _api.delete('${ApiConfig.payments}/$id', token: token);
+
+  // ── Expenses (update) ──
+
+  Future<Map<String, dynamic>> updateExpense(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.expenses}/$id', body, token: token);
+
+  // ── Salary Payments (update/delete) ──
+
+  Future<Map<String, dynamic>> updateSalaryPayment(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.salaryPayments}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteSalaryPayment(String token, String id) =>
+      _api.delete('${ApiConfig.salaryPayments}/$id', token: token);
+
+  // ── Rental Payments (update/delete) ──
+
+  Future<Map<String, dynamic>> updateRentalPayment(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.rentalPayments}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteRentalPayment(String token, String id) =>
+      _api.delete('${ApiConfig.rentalPayments}/$id', token: token);
+
+  // ── Exchange Rates (update/delete) ──
+
+  Future<Map<String, dynamic>> updateExchangeRate(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.exchangeRateHistory}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteExchangeRate(String token, String id) =>
+      _api.delete('${ApiConfig.exchangeRateHistory}/$id', token: token);
+
+  // ── Sales Commissions (update/delete) ──
+
+  Future<Map<String, dynamic>> updateSalesCommission(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.salesCommissions}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteSalesCommission(String token, String id) =>
+      _api.delete('${ApiConfig.salesCommissions}/$id', token: token);
+
+  // ── Air Flights ──
+
+  Future<List<Map<String, dynamic>>> getAirFlights(String token) =>
+      _getList(ApiConfig.airFlights, token);
+
+  Future<Map<String, dynamic>> createAirFlight(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.airFlights, body, token: token);
+
+  Future<Map<String, dynamic>> updateAirFlight(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.airFlights}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteAirFlight(String token, String id) =>
+      _api.delete('${ApiConfig.airFlights}/$id', token: token);
+
+  // ── Admin Panel ──
+
+  Future<Map<String, dynamic>> adminLogin(String email, String password) =>
+      _api.post(ApiConfig.adminLogin, {'email': email, 'password': password});
+
+  Future<Map<String, dynamic>> adminVerify(String token) =>
+      _api.get(ApiConfig.adminVerify, token: token);
+
+  Future<List<Map<String, dynamic>>> getAdminTenants(String token) =>
+      _getList(ApiConfig.adminTenants, token);
+
+  Future<Map<String, dynamic>> getAdminStats(String token) =>
+      _api.get(ApiConfig.adminStats, token: token);
+
+  Future<Map<String, dynamic>> getAdminTenant(String token, String id) =>
+      _api.get('${ApiConfig.adminTenants}/$id', token: token);
+
+  Future<Map<String, dynamic>> createAdminTenant(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.adminTenants, body, token: token);
+
+  Future<Map<String, dynamic>> updateAdminTenant(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.adminTenants}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> toggleAdminTenant(String token, String id) =>
+      _api.put('${ApiConfig.adminTenants}/$id/toggle', {}, token: token);
+
+  Future<Map<String, dynamic>> deleteAdminTenant(String token, String id) =>
+      _api.delete('${ApiConfig.adminTenants}/$id', token: token);
+
+  Future<Map<String, dynamic>> fullEditAdminTenant(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.adminTenants}/$id/full-edit', body, token: token);
+
+  // ── Subscription ──
+
+  Future<Map<String, dynamic>> getSubscriptionStatus(String token) =>
+      _api.get(ApiConfig.subscriptionStatus, token: token);
+
+  Future<Map<String, dynamic>> createSubscriptionPayment(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.subscriptionPay, body, token: token);
+
+  Future<Map<String, dynamic>> verifySubscription(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.subscriptionVerify, body, token: token);
+
+  // ── Payment Links (Admin) ──
+
+  Future<Map<String, dynamic>> createPaymentLink(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.paymentCreateLink, body, token: token);
+
+  Future<Map<String, dynamic>> sendPaymentEmail(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.paymentSendEmail, body, token: token);
+
+  // ── Sync ──
+
+  Future<Map<String, dynamic>> syncAllData(String token) =>
+      _api.get(ApiConfig.syncAll, token: token);
+
+  Future<Map<String, dynamic>> syncEntity(String token, String entity, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.syncEntity(entity), body, token: token);
+
+  Future<Map<String, dynamic>> syncDeleteEntity(String token, String entity, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.syncDelete(entity), body, token: token);
+
+  // ── Database Operations ──
+
+  Future<Map<String, dynamic>> databaseBackup(String token) =>
+      _api.post(ApiConfig.databaseBackup, {}, token: token);
+
+  Future<Map<String, dynamic>> databaseRestoreSql(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.databaseRestoreSql, body, token: token);
+
+  // ── Car Brands ──
+
+  Future<List<Map<String, dynamic>>> getCarBrands(String token) =>
+      _getList(ApiConfig.carBrands, token);
+
+  // ── Health Check ──
+
+  Future<Map<String, dynamic>> healthCheck() =>
+      _api.get(ApiConfig.health);
+
+  // ── Employee Activity Logs ──
+
+  Future<List<Map<String, dynamic>>> getEmployeeActivityLogs(String token) =>
+      _getList(ApiConfig.employeeActivityLogs, token);
+
+  Future<Map<String, dynamic>> createEmployeeActivityLog(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.employeeActivityLogs, body, token: token);
+
+  // ── Tenant Auth ──
+
+  Future<Map<String, dynamic>> tenantResendCode(Map<String, dynamic> body) =>
+      _api.post(ApiConfig.tenantResendCode, body);
+
+  Future<Map<String, dynamic>> tenantVerify(Map<String, dynamic> body) =>
+      _api.post(ApiConfig.tenantVerify, body);
+
+  // ── Employee OTP ──
+
+  Future<Map<String, dynamic>> employeeVerifyOtp(Map<String, dynamic> body) =>
+      _api.post(ApiConfig.employeeVerifyOtp, body);
+
+  Future<Map<String, dynamic>> employeeResendOtp(Map<String, dynamic> body) =>
+      _api.post(ApiConfig.employeeResendOtp, body);
+
+  // ── Account Types ──
+
+  Future<List<Map<String, dynamic>>> getAccountTypes(String token) =>
+      _getList(ApiConfig.accountTypes, token);
+
+  // ── Next Entry Number ──
+
+  Future<Map<String, dynamic>> getNextEntryNumber(String token) =>
+      _api.get(ApiConfig.nextEntryNumber, token: token);
+
+  // ── Settings ──
+
+  Future<Map<String, dynamic>> getSettings(String token) =>
+      _api.get(ApiConfig.settings, token: token);
+
+  Future<Map<String, dynamic>> updateSettings(String token, Map<String, dynamic> body) =>
+      _api.put(ApiConfig.settings, body, token: token);
+
+  // ── Admin Notifications ──
+
+  Future<List<Map<String, dynamic>>> getAdminNotifications(String token) =>
+      _getList(ApiConfig.adminNotifications, token);
+
+  Future<Map<String, dynamic>> markNotificationRead(String token, String id) =>
+      _api.put('${ApiConfig.adminNotifications}/$id/read', {}, token: token);
+
+  // ── Customer Login ──
+
+  Future<Map<String, dynamic>> customerLogin(Map<String, dynamic> body) =>
+      _api.post(ApiConfig.customerLogin, body);
+
+  // ── Database Backup History ──
+
+  Future<List<Map<String, dynamic>>> getDatabaseBackupHistory(String token) =>
+      _getList(ApiConfig.databaseBackupHistory, token);
+
+  // ── Phone Lines ──
+
+  Future<List<Map<String, dynamic>>> getPhoneLines(String token) =>
+      _getList(ApiConfig.phoneLines, token);
+
+  Future<Map<String, dynamic>> createPhoneLine(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.phoneLines, body, token: token);
+
+  Future<Map<String, dynamic>> updatePhoneLine(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.phoneLines}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deletePhoneLine(String token, String id) =>
+      _api.delete('${ApiConfig.phoneLines}/$id', token: token);
+
+  // ── Car Order Requests ──
+
+  Future<List<Map<String, dynamic>>> getCarOrderRequests(String token) =>
+      _getList(ApiConfig.carOrderRequests, token);
+
+  Future<Map<String, dynamic>> createCarOrderRequest(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.carOrderRequests, body, token: token);
+
+  Future<Map<String, dynamic>> updateCarOrderRequest(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.carOrderRequests}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteCarOrderRequest(String token, String id) =>
+      _api.delete('${ApiConfig.carOrderRequests}/$id', token: token);
+
+  // ── Advertisements ──
+
+  Future<List<Map<String, dynamic>>> getAdvertisements(String token) =>
+      _getList(ApiConfig.advertisements, token);
+
+  Future<Map<String, dynamic>> createAdvertisement(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.advertisements, body, token: token);
+
+  Future<Map<String, dynamic>> updateAdvertisement(String token, String id, Map<String, dynamic> body) =>
+      _api.put('${ApiConfig.advertisements}/$id', body, token: token);
+
+  Future<Map<String, dynamic>> deleteAdvertisement(String token, String id) =>
+      _api.delete('${ApiConfig.advertisements}/$id', token: token);
+
+  // ── Auth (alternative) ──
+
+  Future<Map<String, dynamic>> authLogin(Map<String, dynamic> body) =>
+      _api.post(ApiConfig.authLogin, body);
+
+  Future<Map<String, dynamic>> authRegister(Map<String, dynamic> body) =>
+      _api.post(ApiConfig.authRegister, body);
+
+  Future<Map<String, dynamic>> authVerify(Map<String, dynamic> body) =>
+      _api.post(ApiConfig.authVerify, body);
+
+  // ── Container Expenses (filtered) ──
+
+  Future<List<Map<String, dynamic>>> getExpensesByContainer(String token, String containerId) async {
+    final all = await getExpenses(token);
+    return all.where((e) =>
+      (e['container_id']?.toString() ?? e['containerId']?.toString()) == containerId
+    ).toList();
+  }
+
+  // ── Bulk Expenses ──
+
+  Future<List<Map<String, dynamic>>> createBulkExpenses(String token, List<Map<String, dynamic>> expenses) async {
+    final results = <Map<String, dynamic>>[];
+    for (final exp in expenses) {
+      results.add(await createExpense(token, exp));
+    }
+    return results;
+  }
 }

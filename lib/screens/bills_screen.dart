@@ -17,8 +17,10 @@ class _BillsScreenState extends State<BillsScreen> {
   late final DataService _ds;
   List<Map<String, dynamic>> _bills = [];
   List<Map<String, dynamic>> _billTypes = [];
+  List<Map<String, dynamic>> _filtered = [];
   bool _isLoading = true;
   String? _error;
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -26,6 +28,9 @@ class _BillsScreenState extends State<BillsScreen> {
     _ds = DataService(ApiService());
     _load();
   }
+
+  @override
+  void dispose() { _searchController.dispose(); super.dispose(); }
 
   String get _token => Provider.of<AuthProvider>(context, listen: false).token ?? '';
 
@@ -40,11 +45,26 @@ class _BillsScreenState extends State<BillsScreen> {
       setState(() {
         _bills = results[0];
         _billTypes = results[1];
+        _applyFilter();
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الفواتير'; _isLoading = false; });
+    }
+  }
+
+  void _applyFilter() {
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) {
+      _filtered = List.from(_bills);
+    } else {
+      _filtered = _bills.where((b) {
+        final ref = (b['reference_number'] ?? b['referenceNumber'] ?? b['description'] ?? '').toString().toLowerCase();
+        final type = (b['type'] ?? b['bill_type'] ?? b['category'] ?? '').toString().toLowerCase();
+        final period = (b['billing_period'] ?? b['billingPeriod'] ?? '').toString().toLowerCase();
+        return ref.contains(q) || type.contains(q) || period.contains(q);
+      }).toList();
     }
   }
 
@@ -63,35 +83,59 @@ class _BillsScreenState extends State<BillsScreen> {
         onPressed: _showAddBillDialog,
         child: const Icon(Icons.add),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _error != null
-              ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-                  const SizedBox(height: 12),
-                  Text(_error!),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _load,
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-                    child: const Text('إعادة المحاولة'),
-                  ),
-                ]))
-              : _bills.isEmpty
-                  ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(Icons.receipt_outlined, size: 48, color: AppColors.textMuted),
-                      SizedBox(height: 12),
-                      Text('لا توجد فواتير', style: TextStyle(color: AppColors.textGray)),
-                    ]))
-                  : RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: _load,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 80),
-                        itemCount: _bills.length,
-                        itemBuilder: (ctx, i) => _buildCard(_bills[i]),
+      body: Column(children: [
+        // Search bar
+        Container(
+          color: Colors.white, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (_) => setState(() => _applyFilter()),
+            decoration: InputDecoration(
+              hintText: 'بحث بالمرجع أو النوع...', hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+              prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 22),
+              filled: true, fillColor: AppColors.bgLight,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            ),
+          ),
+        ),
+        // Count
+        Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), color: Colors.white,
+          child: Text('${_filtered.length} فاتورة', style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600))),
+        const Divider(height: 1),
+        // List
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              : _error != null
+                  ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                      const SizedBox(height: 12),
+                      Text(_error!),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _load,
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                        child: const Text('إعادة المحاولة'),
                       ),
-                    ),
+                    ]))
+                  : _filtered.isEmpty
+                      ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Icon(Icons.receipt_outlined, size: 48, color: AppColors.textMuted),
+                          SizedBox(height: 12),
+                          Text('لا توجد فواتير', style: TextStyle(color: AppColors.textGray)),
+                        ]))
+                      : RefreshIndicator(
+                          color: AppColors.primary,
+                          onRefresh: _load,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 80),
+                            itemCount: _filtered.length,
+                            itemBuilder: (ctx, i) => _buildCard(_filtered[i]),
+                          ),
+                        ),
+        ),
+      ]),
     );
   }
 

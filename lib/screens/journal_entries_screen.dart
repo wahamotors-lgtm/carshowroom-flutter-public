@@ -9,6 +9,32 @@ import '../services/account_service.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 
+// Reference type options with Arabic labels and colors
+const Map<String, String> _referenceTypeLabels = {
+  'car': '\u0633\u064a\u0627\u0631\u0629',
+  'sale': '\u0628\u064a\u0639',
+  'expense': '\u0645\u0635\u0631\u0648\u0641',
+  'container': '\u062d\u0627\u0648\u064a\u0629',
+  'shipment': '\u0634\u062d\u0646\u0629',
+};
+
+Color _referenceTypeColor(String type) {
+  switch (type) {
+    case 'car':
+      return AppColors.blue600;
+    case 'sale':
+      return AppColors.success;
+    case 'expense':
+      return AppColors.error;
+    case 'container':
+      return AppColors.teal500;
+    case 'shipment':
+      return AppColors.purple700;
+    default:
+      return AppColors.textMuted;
+  }
+}
+
 class JournalEntriesScreen extends StatefulWidget {
   const JournalEntriesScreen({super.key});
 
@@ -19,15 +45,23 @@ class JournalEntriesScreen extends StatefulWidget {
 class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
   late final AccountService _accountService;
   List<JournalEntryModel> _entries = [];
+  List<JournalEntryModel> _filteredEntries = [];
   List<AccountModel> _accounts = [];
   bool _isLoading = true;
   String? _error;
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _accountService = AccountService(ApiService());
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   String get _token =>
@@ -50,20 +84,42 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         _accounts = results[1] as List<AccountModel>;
         // Sort by entry number descending (newest first)
         _entries.sort((a, b) => b.entryNumber.compareTo(a.entryNumber));
+        _applyFilter();
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e is ApiException ? e.message : 'فشل تحميل القيود';
+        _error = e is ApiException ? e.message : '\u0641\u0634\u0644 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0642\u064a\u0648\u062f';
         _isLoading = false;
       });
     }
   }
 
+  void _applyFilter() {
+    final query = _searchController.text.trim().toLowerCase();
+    if (query.isEmpty) {
+      _filteredEntries = List.from(_entries);
+    } else {
+      _filteredEntries = _entries.where((e) {
+        final descMatch = e.description.toLowerCase().contains(query);
+        final debitName = _accountName(e.debitAccountId).toLowerCase();
+        final creditName = _accountName(e.creditAccountId).toLowerCase();
+        final accountMatch = debitName.contains(query) || creditName.contains(query);
+        final entryNumMatch = e.entryNumber.toString().contains(query);
+        return descMatch || accountMatch || entryNumMatch;
+      }).toList();
+    }
+  }
+
   String _accountName(String id) {
     final account = _accounts.where((a) => a.id == id).firstOrNull;
-    return account?.name ?? 'غير معروف';
+    return account?.name ?? '\u063a\u064a\u0631 \u0645\u0639\u0631\u0648\u0641';
+  }
+
+  String _referenceTypeLabel(String? type) {
+    if (type == null || type.isEmpty) return '';
+    return _referenceTypeLabels[type] ?? type;
   }
 
   @override
@@ -71,7 +127,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'قيود محاسبية',
+          '\u0642\u064a\u0648\u062f \u0645\u062d\u0627\u0633\u0628\u064a\u0629',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         backgroundColor: AppColors.primary,
@@ -84,21 +140,76 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         onPressed: _showAddEntryDialog,
         child: const Icon(Icons.add),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _error != null
-              ? _buildError()
-              : _entries.isEmpty
-                  ? _buildEmpty()
-                  : RefreshIndicator(
-                      color: AppColors.primary,
-                      onRefresh: _loadData,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 80),
-                        itemCount: _entries.length,
-                        itemBuilder: (context, index) => _buildEntryCard(_entries[index]),
-                      ),
-                    ),
+      body: Column(
+        children: [
+          // Search bar
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() => _applyFilter()),
+              decoration: InputDecoration(
+                hintText: '\u0628\u062d\u062b \u0639\u0646 \u0642\u064a\u062f...',
+                hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+                prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 22),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _applyFilter());
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: AppColors.bgLight,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+
+          // Entry count
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.white,
+            child: Text(
+              '${_filteredEntries.length} \u0642\u064a\u062f',
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          // Entry list
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : _error != null
+                    ? _buildError()
+                    : _filteredEntries.isEmpty
+                        ? _buildEmpty()
+                        : RefreshIndicator(
+                            color: AppColors.primary,
+                            onRefresh: _loadData,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.only(bottom: 80),
+                              itemCount: _filteredEntries.length,
+                              itemBuilder: (context, index) => _buildEntryCard(_filteredEntries[index]),
+                            ),
+                          ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -114,7 +225,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
           ElevatedButton.icon(
             onPressed: _loadData,
             icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('إعادة المحاولة'),
+            label: const Text('\u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629'),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
           ),
         ],
@@ -123,15 +234,26 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
   }
 
   Widget _buildEmpty() {
-    return const Center(
+    final hasSearch = _searchController.text.trim().isNotEmpty;
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_outlined, size: 48, color: AppColors.textMuted),
-          SizedBox(height: 12),
-          Text('لا توجد قيود محاسبية', style: TextStyle(color: AppColors.textGray)),
-          SizedBox(height: 4),
-          Text('اضغط + لإضافة قيد جديد', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          Icon(
+            hasSearch ? Icons.search_off : Icons.receipt_long_outlined,
+            size: 48,
+            color: AppColors.textMuted,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            hasSearch ? '\u0644\u0627 \u062a\u0648\u062c\u062f \u0646\u062a\u0627\u0626\u062c \u0644\u0644\u0628\u062d\u062b' : '\u0644\u0627 \u062a\u0648\u062c\u062f \u0642\u064a\u0648\u062f \u0645\u062d\u0627\u0633\u0628\u064a\u0629',
+            style: const TextStyle(color: AppColors.textGray),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hasSearch ? '\u062c\u0631\u0628 \u0643\u0644\u0645\u0627\u062a \u0628\u062d\u062b \u0623\u062e\u0631\u0649' : '\u0627\u0636\u063a\u0637 + \u0644\u0625\u0636\u0627\u0641\u0629 \u0642\u064a\u062f \u062c\u062f\u064a\u062f',
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -159,7 +281,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: entry number + date
+              // Header: entry number + description + date
               Row(
                 children: [
                   Container(
@@ -177,6 +299,25 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                       ),
                     ),
                   ),
+                  // Reference type badge
+                  if (entry.referenceType != null && entry.referenceType!.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _referenceTypeColor(entry.referenceType!).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        _referenceTypeLabel(entry.referenceType),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: _referenceTypeColor(entry.referenceType!),
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -297,17 +438,21 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'قيد #${entry.entryNumber}',
+                  '\u0642\u064a\u062f #${entry.entryNumber}',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 16),
-                _detailRow('التاريخ', entry.date),
-                _detailRow('الوصف', entry.description),
-                _detailRow('حساب مدين', _accountName(entry.debitAccountId)),
-                _detailRow('حساب دائن', _accountName(entry.creditAccountId)),
-                _detailRow('المبلغ', '${entry.amount.toStringAsFixed(2)} ${entry.currency}'),
+                _detailRow('\u0627\u0644\u062a\u0627\u0631\u064a\u062e', entry.date),
+                _detailRow('\u0627\u0644\u0648\u0635\u0641', entry.description),
+                _detailRow('\u062d\u0633\u0627\u0628 \u0645\u062f\u064a\u0646', _accountName(entry.debitAccountId)),
+                _detailRow('\u062d\u0633\u0627\u0628 \u062f\u0627\u0626\u0646', _accountName(entry.creditAccountId)),
+                _detailRow('\u0627\u0644\u0645\u0628\u0644\u063a', '${entry.amount.toStringAsFixed(2)} ${entry.currency}'),
+                if (entry.referenceType != null && entry.referenceType!.isNotEmpty)
+                  _detailRow('\u0646\u0648\u0639 \u0627\u0644\u0645\u0631\u062c\u0639', _referenceTypeLabel(entry.referenceType)),
+                if (entry.referenceId != null && entry.referenceId!.isNotEmpty)
+                  _detailRow('\u0631\u0642\u0645 \u0627\u0644\u0645\u0631\u062c\u0639', entry.referenceId!),
                 if (entry.notes != null && entry.notes!.isNotEmpty)
-                  _detailRow('ملاحظات', entry.notes!),
+                  _detailRow('\u0645\u0644\u0627\u062d\u0638\u0627\u062a', entry.notes!),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
@@ -317,7 +462,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                       _confirmDeleteEntry(entry);
                     },
                     icon: const Icon(Icons.delete_outline, size: 18),
-                    label: const Text('حذف القيد'),
+                    label: const Text('\u062d\u0630\u0641 \u0627\u0644\u0642\u064a\u062f'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,
                       side: const BorderSide(color: AppColors.error),
@@ -361,7 +506,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
   void _showAddEntryDialog() {
     if (_accounts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يجب إضافة حسابات أولاً'), backgroundColor: AppColors.error),
+        const SnackBar(content: Text('\u064a\u062c\u0628 \u0625\u0636\u0627\u0641\u0629 \u062d\u0633\u0627\u0628\u0627\u062a \u0623\u0648\u0644\u0627\u064b'), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -369,9 +514,11 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
     final descController = TextEditingController();
     final amountController = TextEditingController();
     final notesController = TextEditingController();
+    final referenceIdController = TextEditingController();
     String? debitAccountId;
     String? creditAccountId;
     String currency = 'USD';
+    String? referenceType;
     final formKey = GlobalKey<FormState>();
     const currencies = ['USD', 'AED', 'KRW', 'SYP', 'SAR', 'CNY'];
 
@@ -381,7 +528,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         builder: (ctx, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
-            'إضافة قيد محاسبي',
+            '\u0625\u0636\u0627\u0641\u0629 \u0642\u064a\u062f \u0645\u062d\u0627\u0633\u0628\u064a',
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
           ),
           content: Form(
@@ -393,18 +540,18 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                   TextFormField(
                     controller: descController,
                     decoration: InputDecoration(
-                      labelText: 'الوصف',
+                      labelText: '\u0627\u0644\u0648\u0635\u0641',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     ),
-                    validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null,
+                    validator: (v) => v!.trim().isEmpty ? '\u0645\u0637\u0644\u0648\u0628' : null,
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: debitAccountId,
                     isExpanded: true,
                     decoration: InputDecoration(
-                      labelText: 'حساب مدين (من)',
+                      labelText: '\u062d\u0633\u0627\u0628 \u0645\u062f\u064a\u0646 (\u0645\u0646)',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     ),
@@ -413,14 +560,14 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                       child: Text(a.name, style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
                     )).toList(),
                     onChanged: (v) => setDialogState(() => debitAccountId = v),
-                    validator: (v) => v == null ? 'مطلوب' : null,
+                    validator: (v) => v == null ? '\u0645\u0637\u0644\u0648\u0628' : null,
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: creditAccountId,
                     isExpanded: true,
                     decoration: InputDecoration(
-                      labelText: 'حساب دائن (إلى)',
+                      labelText: '\u062d\u0633\u0627\u0628 \u062f\u0627\u0626\u0646 (\u0625\u0644\u0649)',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     ),
@@ -429,7 +576,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                       child: Text(a.name, style: const TextStyle(fontSize: 13), overflow: TextOverflow.ellipsis),
                     )).toList(),
                     onChanged: (v) => setDialogState(() => creditAccountId = v),
-                    validator: (v) => v == null ? 'مطلوب' : null,
+                    validator: (v) => v == null ? '\u0645\u0637\u0644\u0648\u0628' : null,
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -440,13 +587,13 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                           controller: amountController,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
-                            labelText: 'المبلغ',
+                            labelText: '\u0627\u0644\u0645\u0628\u0644\u063a',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                           ),
                           validator: (v) {
-                            if (v!.trim().isEmpty) return 'مطلوب';
-                            if (double.tryParse(v) == null || double.parse(v) <= 0) return 'غير صحيح';
+                            if (v!.trim().isEmpty) return '\u0645\u0637\u0644\u0648\u0628';
+                            if (double.tryParse(v) == null || double.parse(v) <= 0) return '\u063a\u064a\u0631 \u0635\u062d\u064a\u062d';
                             return null;
                           },
                         ),
@@ -456,7 +603,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                         child: DropdownButtonFormField<String>(
                           value: currency,
                           decoration: InputDecoration(
-                            labelText: 'العملة',
+                            labelText: '\u0627\u0644\u0639\u0645\u0644\u0629',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
                           ),
@@ -474,11 +621,52 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                     controller: notesController,
                     maxLines: 2,
                     decoration: InputDecoration(
-                      labelText: 'ملاحظات (اختياري)',
+                      labelText: '\u0645\u0644\u0627\u062d\u0638\u0627\u062a (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  // Reference type dropdown
+                  DropdownButtonFormField<String>(
+                    value: referenceType,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: '\u0646\u0648\u0639 \u0627\u0644\u0645\u0631\u062c\u0639 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    ),
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('\u0628\u062f\u0648\u0646', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                      ),
+                      ...['car', 'sale', 'expense', 'container', 'shipment'].map((type) => DropdownMenuItem(
+                        value: type,
+                        child: Text(
+                          _referenceTypeLabels[type] ?? type,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      )),
+                    ],
+                    onChanged: (v) => setDialogState(() {
+                      referenceType = v;
+                      if (v == null) referenceIdController.clear();
+                    }),
+                  ),
+                  // Reference ID - only shown when reference_type is selected
+                  if (referenceType != null) ...[
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: referenceIdController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: '\u0631\u0642\u0645 \u0627\u0644\u0645\u0631\u062c\u0639 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -486,7 +674,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء'),
+              child: const Text('\u0625\u0644\u063a\u0627\u0621'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -494,7 +682,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                 if (debitAccountId == creditAccountId) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('الحساب المدين والدائن يجب أن يكونا مختلفين'),
+                      content: Text('\u0627\u0644\u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u062f\u064a\u0646 \u0648\u0627\u0644\u062f\u0627\u0626\u0646 \u064a\u062c\u0628 \u0623\u0646 \u064a\u0643\u0648\u0646\u0627 \u0645\u062e\u062a\u0644\u0641\u064a\u0646'),
                       backgroundColor: AppColors.error,
                     ),
                   );
@@ -508,6 +696,8 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                   amount: double.parse(amountController.text.trim()),
                   currency: currency,
                   notes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+                  referenceType: referenceType,
+                  referenceId: referenceIdController.text.trim().isEmpty ? null : referenceIdController.text.trim(),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -515,7 +705,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text('إضافة', style: TextStyle(fontWeight: FontWeight.w700)),
+              child: const Text('\u0625\u0636\u0627\u0641\u0629', style: TextStyle(fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -530,6 +720,8 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
     required double amount,
     required String currency,
     String? notes,
+    String? referenceType,
+    String? referenceId,
   }) async {
     try {
       final entryNumber = await _accountService.getNextEntryNumber(_token);
@@ -544,17 +736,19 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
         'amount': amount,
         'currency': currency,
         if (notes != null) 'notes': notes,
+        if (referenceType != null) 'reference_type': referenceType,
+        if (referenceId != null) 'reference_id': referenceId,
       });
       _loadData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم إضافة القيد'), backgroundColor: AppColors.success),
+          const SnackBar(content: Text('\u062a\u0645 \u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0642\u064a\u062f'), backgroundColor: AppColors.success),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة القيد'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(e is ApiException ? e.message : '\u0641\u0634\u0644 \u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0642\u064a\u062f'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -565,15 +759,15 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('حذف القيد', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+        title: const Text('\u062d\u0630\u0641 \u0627\u0644\u0642\u064a\u062f', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
         content: Text(
-          'هل أنت متأكد من حذف قيد #${entry.entryNumber}؟',
+          '\u0647\u0644 \u0623\u0646\u062a \u0645\u062a\u0623\u0643\u062f \u0645\u0646 \u062d\u0630\u0641 \u0642\u064a\u062f #${entry.entryNumber}\u061f',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 14, color: AppColors.textGray),
         ),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('\u0625\u0644\u063a\u0627\u0621')),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -582,13 +776,13 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                 _loadData();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم حذف القيد'), backgroundColor: AppColors.success),
+                    const SnackBar(content: Text('\u062a\u0645 \u062d\u0630\u0641 \u0627\u0644\u0642\u064a\u062f'), backgroundColor: AppColors.success),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e is ApiException ? e.message : 'فشل حذف القيد'), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(e is ApiException ? e.message : '\u0641\u0634\u0644 \u062d\u0630\u0641 \u0627\u0644\u0642\u064a\u062f'), backgroundColor: AppColors.error),
                   );
                 }
               }
@@ -598,7 +792,7 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('حذف', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text('\u062d\u0630\u0641', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
       ),

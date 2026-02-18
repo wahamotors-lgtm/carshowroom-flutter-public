@@ -7,6 +7,7 @@ import '../models/account_model.dart';
 import '../providers/auth_provider.dart';
 import '../services/account_service.dart';
 import '../services/api_service.dart';
+import '../services/data_service.dart';
 import '../widgets/app_drawer.dart';
 
 class AccountsScreen extends StatefulWidget {
@@ -18,8 +19,10 @@ class AccountsScreen extends StatefulWidget {
 
 class _AccountsScreenState extends State<AccountsScreen> {
   late final AccountService _accountService;
+  late final DataService _dataService;
   List<AccountModel> _accounts = [];
   List<AccountModel> _filteredAccounts = [];
+  List<String> _accountTypes = [];
   bool _isLoading = true;
   String? _error;
   final _searchController = TextEditingController();
@@ -29,6 +32,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
   void initState() {
     super.initState();
     _accountService = AccountService(ApiService());
+    _dataService = DataService(ApiService());
     _loadAccounts();
   }
 
@@ -48,7 +52,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
     });
 
     try {
-      final accounts = await _accountService.getAccounts(_token);
+      final results = await Future.wait([
+        _accountService.getAccounts(_token),
+        _dataService.getAccountTypes(_token).catchError((_) => <Map<String, dynamic>>[]),
+      ]);
+      final accounts = results[0] as List<AccountModel>;
+      final typesRaw = results[1] as List<Map<String, dynamic>>;
       debugPrint('Accounts loaded: ${accounts.length}');
       for (final a in accounts.take(3)) {
         debugPrint('  Account: id=${a.id}, name=${a.name}, parentId=${a.parentId}, type=${a.type}');
@@ -56,6 +65,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
       if (!mounted) return;
       setState(() {
         _accounts = accounts;
+        if (typesRaw.isNotEmpty) {
+          _accountTypes = typesRaw.map((t) => (t['key'] ?? t['value'] ?? t['name'] ?? '').toString()).where((s) => s.isNotEmpty).toList();
+        }
         _applyFilter();
         _isLoading = false;
       });
@@ -517,7 +529,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     String? selectedCurrency;
     final formKey = GlobalKey<FormState>();
 
-    final types = [
+    final types = _accountTypes.isNotEmpty ? _accountTypes : [
       'cash_box', 'bank', 'customer', 'supplier', 'revenue', 'expense',
       'showroom', 'customs', 'employee', 'purchases', 'capital',
       'shipping_company', 'other',
@@ -618,7 +630,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     String selectedType = account.type;
     final formKey = GlobalKey<FormState>();
 
-    final types = [
+    final types = _accountTypes.isNotEmpty ? _accountTypes : [
       'cash_box', 'bank', 'customer', 'supplier', 'revenue', 'expense',
       'showroom', 'customs', 'employee', 'purchases', 'capital',
       'shipping_company', 'other',

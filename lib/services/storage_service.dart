@@ -7,6 +7,10 @@ class StorageService {
   static const String _tenantKey = 'tenantInfo';
   static const String _employeeKey = 'loggedInEmployee';
   static const String _loginTypeKey = 'loginType';
+  static const String _adminTokenKey = 'adminToken';
+  static const String _adminKey = 'adminInfo';
+  static const String _customerTokenKey = 'customerToken';
+  static const String _customerKey = 'customerInfo';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -75,6 +79,52 @@ class StorageService {
     return prefs.getString(_loginTypeKey);
   }
 
+  // Admin token & info
+  Future<void> saveAdminToken(String token) async {
+    final prefs = await _prefs;
+    await prefs.setString(_adminTokenKey, token);
+  }
+
+  Future<String?> getAdminToken() async {
+    final prefs = await _prefs;
+    return prefs.getString(_adminTokenKey);
+  }
+
+  Future<void> saveAdmin(Map<String, dynamic> admin) async {
+    final prefs = await _prefs;
+    await prefs.setString(_adminKey, jsonEncode(admin));
+  }
+
+  Future<Map<String, dynamic>?> getAdmin() async {
+    final prefs = await _prefs;
+    final data = prefs.getString(_adminKey);
+    if (data == null) return null;
+    return jsonDecode(data) as Map<String, dynamic>;
+  }
+
+  // Customer token & info
+  Future<void> saveCustomerToken(String token) async {
+    final prefs = await _prefs;
+    await prefs.setString(_customerTokenKey, token);
+  }
+
+  Future<String?> getCustomerToken() async {
+    final prefs = await _prefs;
+    return prefs.getString(_customerTokenKey);
+  }
+
+  Future<void> saveCustomer(Map<String, dynamic> customer) async {
+    final prefs = await _prefs;
+    await prefs.setString(_customerKey, jsonEncode(customer));
+  }
+
+  Future<Map<String, dynamic>?> getCustomer() async {
+    final prefs = await _prefs;
+    final data = prefs.getString(_customerKey);
+    if (data == null) return null;
+    return jsonDecode(data) as Map<String, dynamic>;
+  }
+
   // Clear all
   Future<void> clearAll() async {
     final prefs = await _prefs;
@@ -83,6 +133,10 @@ class StorageService {
     await prefs.remove(_tenantKey);
     await prefs.remove(_employeeKey);
     await prefs.remove(_loginTypeKey);
+    await prefs.remove(_adminTokenKey);
+    await prefs.remove(_adminKey);
+    await prefs.remove(_customerTokenKey);
+    await prefs.remove(_customerKey);
   }
 
   Future<bool> isLoggedIn() async {

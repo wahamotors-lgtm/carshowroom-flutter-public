@@ -16,13 +16,19 @@ class RentalsScreen extends StatefulWidget {
 class _RentalsScreenState extends State<RentalsScreen> {
   late final DataService _ds;
   List<Map<String, dynamic>> _rentals = [];
+  List<Map<String, dynamic>> _filtered = [];
   bool _isLoading = true;
   String? _error;
+  final _searchController = TextEditingController();
 
   static const List<String> _currencies = ['USD', 'AED', 'KRW', 'SYP', 'SAR', 'CNY'];
 
   @override
   void initState() { super.initState(); _ds = DataService(ApiService()); _load(); }
+
+  @override
+  void dispose() { _searchController.dispose(); super.dispose(); }
+
   String get _token => Provider.of<AuthProvider>(context, listen: false).token ?? '';
 
   Future<void> _load() async {
@@ -30,8 +36,21 @@ class _RentalsScreenState extends State<RentalsScreen> {
     try {
       final data = await _ds.getRentals(_token);
       if (!mounted) return;
-      setState(() { _rentals = data; _isLoading = false; });
+      setState(() { _rentals = data; _applyFilter(); _isLoading = false; });
     } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل الإيجارات'; _isLoading = false; }); }
+  }
+
+  void _applyFilter() {
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) {
+      _filtered = List.from(_rentals);
+    } else {
+      _filtered = _rentals.where((r) {
+        final name = (r['name'] ?? r['property_name'] ?? '').toString().toLowerCase();
+        final notes = (r['notes'] ?? '').toString().toLowerCase();
+        return name.contains(q) || notes.contains(q);
+      }).toList();
+    }
   }
 
   @override
@@ -40,13 +59,37 @@ class _RentalsScreenState extends State<RentalsScreen> {
       appBar: AppBar(title: const Text('الإيجارات', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)), backgroundColor: AppColors.primary, foregroundColor: Colors.white),
       drawer: const AppDrawer(currentRoute: AppRoutes.rentalsPage),
       floatingActionButton: FloatingActionButton(backgroundColor: AppColors.primary, foregroundColor: Colors.white, onPressed: _showAddDialog, child: const Icon(Icons.add)),
-      body: _isLoading ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _error != null ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.error_outline, size: 48, color: AppColors.error), const SizedBox(height: 12), Text(_error!), const SizedBox(height: 16), ElevatedButton(onPressed: _load, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white), child: const Text('إعادة المحاولة'))]))
-          : _rentals.isEmpty ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.home_outlined, size: 48, color: AppColors.textMuted), SizedBox(height: 12), Text('لا توجد إيجارات', style: TextStyle(color: AppColors.textGray))]))
-          : RefreshIndicator(color: AppColors.primary, onRefresh: _load, child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 80), itemCount: _rentals.length,
-              itemBuilder: (ctx, i) => _buildCard(_rentals[i]),
-            )),
+      body: Column(children: [
+        // Search bar
+        Container(
+          color: Colors.white, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (_) => setState(() => _applyFilter()),
+            decoration: InputDecoration(
+              hintText: 'بحث بالاسم...', hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+              prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 22),
+              filled: true, fillColor: AppColors.bgLight,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            ),
+          ),
+        ),
+        // Count
+        Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), color: Colors.white,
+          child: Text('${_filtered.length} إيجار', style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600))),
+        const Divider(height: 1),
+        // List
+        Expanded(
+          child: _isLoading ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              : _error != null ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.error_outline, size: 48, color: AppColors.error), const SizedBox(height: 12), Text(_error!), const SizedBox(height: 16), ElevatedButton(onPressed: _load, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white), child: const Text('إعادة المحاولة'))]))
+              : _filtered.isEmpty ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.home_outlined, size: 48, color: AppColors.textMuted), SizedBox(height: 12), Text('لا توجد إيجارات', style: TextStyle(color: AppColors.textGray))]))
+              : RefreshIndicator(color: AppColors.primary, onRefresh: _load, child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 80), itemCount: _filtered.length,
+                  itemBuilder: (ctx, i) => _buildCard(_filtered[i]),
+                )),
+        ),
+      ]),
     );
   }
 

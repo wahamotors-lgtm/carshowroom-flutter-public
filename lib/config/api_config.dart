@@ -98,6 +98,50 @@ class ApiConfig {
   // Employee Activity Logs
   static const String employeeActivityLogs = '$apiBase/employee-activity-logs';
 
+  // Admin (Super Admin Panel)
+  static const String adminLogin = '$apiBase/admin/login';
+  static const String adminVerify = '$apiBase/admin/verify';
+  static const String adminTenants = '$apiBase/admin/tenants';
+  static const String adminStats = '$apiBase/admin/stats';
+
+  // Subscription
+  static const String subscriptionStatus = '$apiBase/subscription/status';
+  static const String subscriptionPay = '$apiBase/subscription/pay';
+  static const String subscriptionVerify = '$apiBase/subscription/verify';
+
+  // Sync
+  static const String syncAll = '$apiBase/sync/all';
+  static String syncEntity(String entity) => '$apiBase/sync/$entity';
+  static String syncDelete(String entity) => '$apiBase/sync/delete/$entity';
+
+  // Customer Auth & Portal
+  static const String customerLogin = '$apiBase/customer/login';
+  static const String customerCars = '$apiBase/customer/cars';
+  static const String customerBalance = '$apiBase/customer/balance';
+  static const String customerTransactions = '$apiBase/customer/transactions';
+
+  // Database Operations
+  static const String databaseBackup = '$apiBase/database/backup';
+  static const String databaseRestoreSql = '$apiBase/database/restore-sql';
+  static const String databaseBackupHistory = '$apiBase/database/backup-history';
+
+  // Payment (Admin)
+  static const String paymentCreateLink = '$apiBase/payment/create-link';
+  static const String paymentSendEmail = '$apiBase/payment/send-email';
+
+  // Reference / Stubs
+  static const String phoneLines = '$apiBase/phone-lines';
+  static const String carOrderRequests = '$apiBase/car-order-requests';
+  static const String advertisements = '$apiBase/advertisements';
+
+  // Health
+  static const String health = '$apiBase/health';
+
+  // Auth (alternative)
+  static const String authLogin = '$apiBase/auth/login';
+  static const String authRegister = '$apiBase/auth/register';
+  static const String authVerify = '$apiBase/auth/verify';
+
   // WebView (legacy)
   static const String webAppUrl = '$baseUrl/app/';
   static const String webAppDashboard = '$baseUrl/app/#/dashboard';

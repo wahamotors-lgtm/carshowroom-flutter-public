@@ -42,6 +42,31 @@ import 'screens/smart_search_screen.dart';
 import 'screens/rental_payments_screen.dart';
 import 'screens/users_screen.dart';
 import 'screens/backup_restore_screen.dart';
+import 'screens/customer_login_screen.dart';
+import 'screens/super_admin_login_screen.dart';
+import 'screens/customer_dashboard_screen.dart';
+import 'screens/employee_dashboard_screen.dart';
+import 'screens/super_admin_dashboard_screen.dart';
+import 'screens/car_pricing_screen.dart';
+import 'screens/car_photos_screen.dart';
+import 'screens/sell_car_wizard_screen.dart';
+import 'screens/subscription_screen.dart';
+import 'screens/orphaned_expenses_screen.dart';
+import 'screens/data_migration_screen.dart';
+import 'screens/data_deletion_screen.dart';
+import 'screens/system_diagnostics_screen.dart';
+import 'screens/public_showroom_screen.dart';
+import 'screens/market_research_screen.dart';
+import 'screens/privacy_policy_screen.dart';
+import 'screens/terms_of_service_screen.dart';
+import 'screens/qr_login_screen.dart';
+import 'screens/barcode_scanner_screen.dart';
+import 'screens/landing_screen.dart';
+import 'screens/container_expenses_screen.dart';
+import 'screens/bulk_expense_screen.dart';
+import 'screens/advanced_entry_screen.dart';
+import 'screens/statements_screen.dart';
+import 'screens/demo_screen.dart';
 
 class CarWhatsApp extends StatelessWidget {
   const CarWhatsApp({super.key});
@@ -88,6 +113,8 @@ class CarWhatsApp extends StatelessWidget {
         AppRoutes.accounts: (_) => const AccountsScreen(),
         AppRoutes.journalEntries: (_) => const JournalEntriesScreen(),
         AppRoutes.expenseRecord: (_) => const ExpenseRecordScreen(),
+        AppRoutes.bulkExpense: (_) => const BulkExpenseScreen(),
+        AppRoutes.advancedEntry: (_) => const AdvancedEntryScreen(),
         AppRoutes.paymentsPage: (_) => const PaymentsScreen(),
 
         // Inventory
@@ -104,6 +131,7 @@ class CarWhatsApp extends StatelessWidget {
         // Procurement & Shipping
         AppRoutes.suppliersPage: (_) => const SuppliersScreen(),
         AppRoutes.containersPage: (_) => const ContainersScreen(),
+        AppRoutes.containerExpenses: (_) => const ContainerExpensesScreen(),
         AppRoutes.shipmentsPage: (_) => const ShipmentsScreen(),
         AppRoutes.deliveriesPage: (_) => const DeliveriesScreen(),
         AppRoutes.airFlightsPage: (_) => const AirFlightsScreen(),
@@ -122,6 +150,7 @@ class CarWhatsApp extends StatelessWidget {
         // Reports
         AppRoutes.reportsPage: (_) => const ReportsScreen(),
         AppRoutes.profitsPage: (_) => const ProfitsScreen(),
+        AppRoutes.statementsPage: (_) => const StatementsScreen(),
 
         // Smart Search
         AppRoutes.smartSearchPage: (_) => const SmartSearchScreen(),
@@ -141,6 +170,49 @@ class CarWhatsApp extends StatelessWidget {
         AppRoutes.activityLogPage: (_) => const ActivityLogScreen(),
         AppRoutes.notesPage: (_) => const NotesScreen(),
         AppRoutes.settingsPage: (_) => const SettingsScreen(),
+
+        // Customer Portal
+        AppRoutes.customerLogin: (_) => const CustomerLoginScreen(),
+        AppRoutes.customerDashboard: (_) => const CustomerDashboardScreen(),
+
+        // Employee Portal
+        AppRoutes.employeeDashboard: (_) => const EmployeeDashboardScreen(),
+
+        // Admin Panel
+        AppRoutes.superAdminLogin: (_) => const SuperAdminLoginScreen(),
+        AppRoutes.superAdminDashboard: (_) => const SuperAdminDashboardScreen(),
+
+        // Vehicle Management
+        AppRoutes.carPricing: (_) => const CarPricingScreen(),
+        AppRoutes.carPhotos: (_) => const CarPhotosScreen(),
+        AppRoutes.sellCarWizard: (_) => const SellCarWizardScreen(),
+
+        // Financial
+        AppRoutes.subscriptionPage: (_) => const SubscriptionScreen(),
+        AppRoutes.orphanedExpenses: (_) => const OrphanedExpensesScreen(),
+
+        // Data Management
+        AppRoutes.dataMigration: (_) => const DataMigrationScreen(),
+        AppRoutes.dataDeletion: (_) => const DataDeletionScreen(),
+        AppRoutes.systemDiagnostics: (_) => const SystemDiagnosticsScreen(),
+
+        // Marketing
+        AppRoutes.publicShowroom: (_) => const PublicShowroomScreen(),
+        AppRoutes.marketResearch: (_) => const MarketResearchScreen(),
+
+        // Information
+        AppRoutes.privacyPolicy: (_) => const PrivacyPolicyScreen(),
+        AppRoutes.termsOfService: (_) => const TermsOfServiceScreen(),
+
+        // Utilities
+        AppRoutes.qrLogin: (_) => const QrLoginScreen(),
+        AppRoutes.barcodeScanner: (_) => const BarcodeScannerScreen(),
+
+        // Demo
+        AppRoutes.demoPage: (_) => const DemoScreen(),
+
+        // Landing
+        AppRoutes.landingPage: (_) => const LandingScreen(),
       },
     );
   }

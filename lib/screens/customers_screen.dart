@@ -53,7 +53,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
         final name = (c['name'] ?? '').toString().toLowerCase();
         final code = (c['customer_code'] ?? c['customerCode'] ?? '').toString().toLowerCase();
         final phone = (c['phone'] ?? '').toString().toLowerCase();
-        return name.contains(q) || code.contains(q) || phone.contains(q);
+        final email = (c['email'] ?? '').toString().toLowerCase();
+        return name.contains(q) || code.contains(q) || phone.contains(q) || email.contains(q);
       }).toList();
     }
   }
@@ -123,8 +124,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
         ),
         title: Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (code.isNotEmpty) Text('كود: $code', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-          if (phone.isNotEmpty) Text(phone, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+          if (code.toString().isNotEmpty) Text('كود: $code', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+          if (phone.toString().isNotEmpty) Text(phone, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
         ]),
         trailing: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisAlignment: MainAxisAlignment.center, children: [
           Text('${balance.toStringAsFixed(0)} \$', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: balance >= 0 ? AppColors.success : AppColors.error)),
@@ -137,6 +138,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   void _showCustomerDetails(Map<String, dynamic> c) {
+    final balance = double.tryParse('${c['balance'] ?? 0}') ?? 0;
+    final debt = double.tryParse('${c['debt'] ?? 0}') ?? 0;
+
     showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -147,23 +151,28 @@ class _CustomersScreenState extends State<CustomersScreen> {
             const SizedBox(height: 20),
             Text(c['name'] ?? '', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
             const SizedBox(height: 16),
-            _detailRow('الكود', c['customer_code'] ?? c['customerCode'] ?? '-'),
+            _detailRow('كود العميل', c['customer_code'] ?? c['customerCode'] ?? '-'),
+            _detailRow('الاسم', c['name'] ?? '-'),
             _detailRow('الهاتف', c['phone'] ?? '-'),
             _detailRow('البريد', c['email'] ?? '-'),
             _detailRow('العنوان', c['address'] ?? '-'),
-            _detailRow('الرصيد', '${(double.tryParse('${c['balance'] ?? 0}') ?? 0).toStringAsFixed(2)} \$'),
-            _detailRow('الدين', '${(double.tryParse('${c['debt'] ?? 0}') ?? 0).toStringAsFixed(2)} \$'),
+            _detailRow('المدينة', c['city'] ?? '-'),
+            _detailRow('الدولة', c['country'] ?? '-'),
+            _detailRow('الرصيد', '${balance.toStringAsFixed(2)} \$', valueColor: balance >= 0 ? AppColors.success : AppColors.error),
+            _detailRow('الدين', '${debt.toStringAsFixed(2)} \$', valueColor: debt > 0 ? AppColors.error : null),
+            _detailRow('تاريخ الإنشاء', c['created_at'] ?? c['createdAt'] ?? '-'),
+            _detailRow('ملاحظات', c['notes'] ?? '-'),
           ]),
         )),
       ),
     );
   }
 
-  Widget _detailRow(String label, String value) {
-    if (value == '-' || value == 'null') return const SizedBox.shrink();
+  Widget _detailRow(String label, String value, {Color? valueColor}) {
+    if (value == '-' || value == 'null' || value.isEmpty) return const SizedBox.shrink();
     return Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Row(children: [
-      SizedBox(width: 80, child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textMuted, fontWeight: FontWeight.w600))),
-      Expanded(child: Text(value, style: const TextStyle(fontSize: 13, color: AppColors.textDark, fontWeight: FontWeight.w600))),
+      SizedBox(width: 90, child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textMuted, fontWeight: FontWeight.w600))),
+      Expanded(child: Text(value, style: TextStyle(fontSize: 13, color: valueColor ?? AppColors.textDark, fontWeight: FontWeight.w600))),
     ]));
   }
 
@@ -180,20 +189,29 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   void _showAddCustomerDialog() {
+    final codeC = TextEditingController();
     final nameC = TextEditingController();
     final phoneC = TextEditingController();
     final emailC = TextEditingController();
+    final addressC = TextEditingController();
+    final notesC = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     showDialog(context: context, builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Text('إضافة عميل', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
       content: Form(key: formKey, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextFormField(controller: nameC, decoration: InputDecoration(labelText: 'اسم العميل', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
+        TextFormField(controller: codeC, decoration: InputDecoration(labelText: 'كود العميل', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
         const SizedBox(height: 12),
-        TextFormField(controller: phoneC, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: 'الهاتف', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+        TextFormField(controller: nameC, decoration: InputDecoration(labelText: 'الاسم', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
         const SizedBox(height: 12),
-        TextFormField(controller: emailC, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: 'البريد (اختياري)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+        TextFormField(controller: phoneC, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: 'رقم الهاتف', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
+        const SizedBox(height: 12),
+        TextFormField(controller: emailC, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: 'البريد الإلكتروني (اختياري)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+        const SizedBox(height: 12),
+        TextFormField(controller: addressC, decoration: InputDecoration(labelText: 'العنوان', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
+        const SizedBox(height: 12),
+        TextFormField(controller: notesC, maxLines: 3, decoration: InputDecoration(labelText: 'ملاحظات (اختياري)', alignLabelWithHint: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
       ]))),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
@@ -202,7 +220,14 @@ class _CustomersScreenState extends State<CustomersScreen> {
             if (!formKey.currentState!.validate()) return;
             Navigator.pop(ctx);
             try {
-              await _dataService.createCustomer(_token, { 'name': nameC.text.trim(), if (phoneC.text.trim().isNotEmpty) 'phone': phoneC.text.trim(), if (emailC.text.trim().isNotEmpty) 'email': emailC.text.trim() });
+              await _dataService.createCustomer(_token, {
+                'customer_code': codeC.text.trim(),
+                'name': nameC.text.trim(),
+                'phone': phoneC.text.trim(),
+                if (emailC.text.trim().isNotEmpty) 'email': emailC.text.trim(),
+                'address': addressC.text.trim(),
+                if (notesC.text.trim().isNotEmpty) 'notes': notesC.text.trim(),
+              });
               _loadData();
               if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة العميل'), backgroundColor: AppColors.success));
             } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل إضافة العميل'), backgroundColor: AppColors.error)); }
@@ -215,8 +240,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   void _showEditCustomerDialog(Map<String, dynamic> c) {
+    final codeC = TextEditingController(text: c['customer_code'] ?? c['customerCode'] ?? '');
     final nameC = TextEditingController(text: c['name'] ?? '');
     final phoneC = TextEditingController(text: c['phone'] ?? '');
+    final emailC = TextEditingController(text: c['email'] ?? '');
+    final addressC = TextEditingController(text: c['address'] ?? '');
+    final notesC = TextEditingController(text: c['notes'] ?? '');
     final id = c['id']?.toString() ?? c['_id']?.toString();
     if (id == null) return;
     final formKey = GlobalKey<FormState>();
@@ -225,9 +254,17 @@ class _CustomersScreenState extends State<CustomersScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Text('تعديل العميل', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
       content: Form(key: formKey, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextFormField(controller: codeC, decoration: InputDecoration(labelText: 'كود العميل', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
+        const SizedBox(height: 12),
         TextFormField(controller: nameC, decoration: InputDecoration(labelText: 'الاسم', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
         const SizedBox(height: 12),
-        TextFormField(controller: phoneC, decoration: InputDecoration(labelText: 'الهاتف', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+        TextFormField(controller: phoneC, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: 'رقم الهاتف', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
+        const SizedBox(height: 12),
+        TextFormField(controller: emailC, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: 'البريد الإلكتروني (اختياري)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+        const SizedBox(height: 12),
+        TextFormField(controller: addressC, decoration: InputDecoration(labelText: 'العنوان', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))), validator: (v) => v!.trim().isEmpty ? 'مطلوب' : null),
+        const SizedBox(height: 12),
+        TextFormField(controller: notesC, maxLines: 3, decoration: InputDecoration(labelText: 'ملاحظات (اختياري)', alignLabelWithHint: true, border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
       ]))),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
@@ -236,9 +273,17 @@ class _CustomersScreenState extends State<CustomersScreen> {
             if (!formKey.currentState!.validate()) return;
             Navigator.pop(ctx);
             try {
-              await _dataService.updateCustomer(_token, id, { 'name': nameC.text.trim(), 'phone': phoneC.text.trim() });
+              await _dataService.updateCustomer(_token, id, {
+                'customer_code': codeC.text.trim(),
+                'name': nameC.text.trim(),
+                'phone': phoneC.text.trim(),
+                if (emailC.text.trim().isNotEmpty) 'email': emailC.text.trim(),
+                'address': addressC.text.trim(),
+                if (notesC.text.trim().isNotEmpty) 'notes': notesC.text.trim(),
+              });
               _loadData();
-            } catch (_) {}
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تعديل العميل'), backgroundColor: AppColors.success));
+            } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e is ApiException ? e.message : 'فشل تعديل العميل'), backgroundColor: AppColors.error)); }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
           child: const Text('حفظ'),

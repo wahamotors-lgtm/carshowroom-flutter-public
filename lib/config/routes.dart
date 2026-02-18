@@ -53,4 +53,55 @@ class AppRoutes {
   static const String usersPage = '/users';
   static const String backupRestorePage = '/backup-restore';
   static const String smartSearchPage = '/smart-search';
+
+  // Customer Portal
+  static const String customerLogin = '/customer-login';
+  static const String customerDashboard = '/customer-dashboard';
+
+  // Employee Portal
+  static const String employeeDashboard = '/employee-dashboard';
+
+  // Admin Panel
+  static const String superAdminLogin = '/super-admin-login';
+  static const String superAdminDashboard = '/super-admin-dashboard';
+
+  // Vehicle Management
+  static const String carPricing = '/car-pricing';
+  static const String carPhotos = '/car-photos';
+  static const String sellCarWizard = '/sell-car-wizard';
+
+  // Financial
+  static const String subscriptionPage = '/subscription';
+  static const String orphanedExpenses = '/orphaned-expenses';
+
+  // Data Management
+  static const String dataMigration = '/data-migration';
+  static const String dataDeletion = '/data-deletion';
+  static const String systemDiagnostics = '/system-diagnostics';
+
+  // Marketing
+  static const String publicShowroom = '/public-showroom';
+  static const String marketResearch = '/market-research';
+
+  // Information
+  static const String privacyPolicy = '/privacy-policy';
+  static const String termsOfService = '/terms-of-service';
+
+  // Utilities
+  static const String qrLogin = '/qr-login';
+  static const String barcodeScanner = '/barcode-scanner';
+
+  // Container Expenses & Bulk
+  static const String containerExpenses = '/container-expenses';
+  static const String bulkExpense = '/bulk-expense';
+  static const String advancedEntry = '/advanced-entry';
+
+  // Statements
+  static const String statementsPage = '/statements';
+
+  // Demo
+  static const String demoPage = '/demo';
+
+  // Landing
+  static const String landingPage = '/landing';
 }

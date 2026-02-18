@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import '../config/routes.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
+import '../services/data_service.dart';
 import '../services/api_service.dart';
-import '../config/api_config.dart';
 import '../widgets/app_drawer.dart';
 
 class CustomerAccountsScreen extends StatefulWidget {
@@ -14,42 +14,91 @@ class CustomerAccountsScreen extends StatefulWidget {
 }
 
 class _CustomerAccountsScreenState extends State<CustomerAccountsScreen> {
-  late final ApiService _api;
+  late final DataService _ds;
   List<Map<String, dynamic>> _accounts = [];
+  List<Map<String, dynamic>> _filtered = [];
   bool _isLoading = true;
   String? _error;
+  final _searchController = TextEditingController();
 
   @override
-  void initState() { super.initState(); _api = ApiService(); _load(); }
+  void initState() { super.initState(); _ds = DataService(ApiService()); _load(); }
+
+  @override
+  void dispose() { _searchController.dispose(); super.dispose(); }
+
   String get _token => Provider.of<AuthProvider>(context, listen: false).token ?? '';
 
   Future<void> _load() async {
     setState(() { _isLoading = true; _error = null; });
     try {
-      final data = await _api.getList(ApiConfig.customerAccounts, token: _token);
+      final data = await _ds.getCustomerAccounts(_token);
       if (!mounted) return;
-      setState(() { _accounts = data.cast<Map<String, dynamic>>(); _isLoading = false; });
+      setState(() { _accounts = data; _applyFilter(); _isLoading = false; });
     } catch (e) { if (!mounted) return; setState(() { _error = e is ApiException ? e.message : 'فشل تحميل حسابات العملاء'; _isLoading = false; }); }
+  }
+
+  void _applyFilter() {
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) {
+      _filtered = List.from(_accounts);
+    } else {
+      _filtered = _accounts.where((a) {
+        final name = (a['customer_name'] ?? a['customerName'] ?? a['name'] ?? '').toString().toLowerCase();
+        final code = (a['code'] ?? a['customer_code'] ?? '').toString().toLowerCase();
+        return name.contains(q) || code.contains(q);
+      }).toList();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('حسابات العملاء', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)), backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+      appBar: AppBar(
+        title: const Text('حسابات العملاء', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        backgroundColor: AppColors.primary, foregroundColor: Colors.white,
+      ),
       drawer: const AppDrawer(currentRoute: AppRoutes.customerAccountsPage),
-      body: _isLoading ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _error != null ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error), const SizedBox(height: 12), Text(_error!),
-              const SizedBox(height: 16), ElevatedButton(onPressed: _load, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white), child: const Text('إعادة المحاولة')),
-            ]))
-          : _accounts.isEmpty ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Icon(Icons.account_balance_wallet_outlined, size: 48, color: AppColors.textMuted), SizedBox(height: 12),
-              Text('لا توجد حسابات عملاء', style: TextStyle(color: AppColors.textGray)),
-            ]))
-          : RefreshIndicator(color: AppColors.primary, onRefresh: _load, child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 20), itemCount: _accounts.length,
-              itemBuilder: (ctx, i) => _buildCard(_accounts[i]),
-            )),
+      body: Column(children: [
+        // Search bar
+        Container(
+          color: Colors.white, padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (_) => setState(() => _applyFilter()),
+            decoration: InputDecoration(
+              hintText: 'بحث بالاسم أو الكود...', hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+              prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 22),
+              filled: true, fillColor: AppColors.bgLight,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            ),
+          ),
+        ),
+        // Count
+        Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), color: Colors.white,
+          child: Text('${_filtered.length} حساب عميل', style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.w600))),
+        const Divider(height: 1),
+        // List
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+              : _error != null
+                  ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      const Icon(Icons.error_outline, size: 48, color: AppColors.error), const SizedBox(height: 12), Text(_error!),
+                      const SizedBox(height: 16), ElevatedButton(onPressed: _load, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white), child: const Text('إعادة المحاولة')),
+                    ]))
+                  : _filtered.isEmpty
+                      ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Icon(Icons.account_balance_wallet_outlined, size: 48, color: AppColors.textMuted), SizedBox(height: 12),
+                          Text('لا توجد حسابات عملاء', style: TextStyle(color: AppColors.textGray)),
+                        ]))
+                      : RefreshIndicator(color: AppColors.primary, onRefresh: _load, child: ListView.builder(
+                          padding: const EdgeInsets.only(bottom: 20), itemCount: _filtered.length,
+                          itemBuilder: (ctx, i) => _buildCard(_filtered[i]),
+                        )),
+        ),
+      ]),
     );
   }
 

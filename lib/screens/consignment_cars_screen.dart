@@ -90,7 +90,7 @@ class _ConsignmentCarsScreenState extends State<ConsignmentCarsScreen> with Sing
         _ds.getConsignmentCars(_token),
         _ds.getConsignmentSales(_token),
         _ds.getAccounts(_token),
-        _ds.getCurrencies(_token),
+        _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       setState(() {

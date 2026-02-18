@@ -103,7 +103,7 @@ class _ExpenseRecordScreenState extends State<ExpenseRecordScreen> {
   }
 
   Widget _buildExpenseCard(Map<String, dynamic> expense) {
-    final amount = (expense['amount'] ?? 0).toDouble();
+    final amount = double.tryParse('${expense['amount'] ?? 0}') ?? 0;
     final currency = expense['currency'] ?? 'USD';
     final description = expense['description'] ?? '';
     final date = expense['date'] ?? '';

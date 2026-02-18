@@ -94,7 +94,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
   }
 
   double _getDebit(Map<String, dynamic> account) {
-    final balance = (account['balance'] ?? 0).toDouble();
+    final balance = (double.tryParse('${account['balance'] ?? 0}') ?? 0);
     final type = (account['type'] ?? '').toString();
     if (_isDebitAccount(type)) {
       return balance >= 0 ? balance : 0;
@@ -104,7 +104,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
   }
 
   double _getCredit(Map<String, dynamic> account) {
-    final balance = (account['balance'] ?? 0).toDouble();
+    final balance = (double.tryParse('${account['balance'] ?? 0}') ?? 0);
     final type = (account['type'] ?? '').toString();
     if (_isDebitAccount(type)) {
       return balance < 0 ? balance.abs() : 0;
@@ -134,7 +134,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
     for (final a in _accounts) {
       final type = (a['type'] ?? '').toString().toLowerCase();
       if (types.contains(type)) {
-        total += (a['balance'] ?? 0).toDouble();
+        total += double.tryParse('${a['balance'] ?? 0}') ?? 0;
       }
     }
     return total;
@@ -734,7 +734,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
     final name = account['name_ar'] ?? account['name'] ?? '';
     final nameEn = account['name'] ?? '';
     final type = (account['type'] ?? '').toString();
-    final balance = (account['balance'] ?? 0).toDouble();
+    final balance = (double.tryParse('${account['balance'] ?? 0}') ?? 0);
     final code = account['code'] ?? '';
     final currency = account['currency'] ?? '';
     final description = account['description'] ?? '';

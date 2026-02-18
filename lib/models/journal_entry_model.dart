@@ -1,3 +1,10 @@
+double _pd(dynamic value) {
+  if (value == null) return 0;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0;
+  return 0;
+}
+
 class JournalEntryModel {
   final String id;
   final int entryNumber;
@@ -44,11 +51,11 @@ class JournalEntryModel {
       description: json['description'] ?? '',
       debitAccountId: json['debit_account_id']?.toString() ?? json['debitAccountId']?.toString() ?? '',
       creditAccountId: json['credit_account_id']?.toString() ?? json['creditAccountId']?.toString() ?? '',
-      amount: (json['amount'] ?? 0).toDouble(),
+      amount: _pd(json['amount']),
       currency: json['currency'] ?? 'USD',
-      creditAmount: json['credit_amount'] != null ? (json['credit_amount']).toDouble() : null,
+      creditAmount: json['credit_amount'] != null ? _pd(json['credit_amount']) : null,
       creditCurrency: json['credit_currency'] ?? json['creditCurrency'],
-      exchangeRate: json['exchange_rate'] != null ? (json['exchange_rate']).toDouble() : null,
+      exchangeRate: json['exchange_rate'] != null ? _pd(json['exchange_rate']) : null,
       referenceType: json['reference_type'] ?? json['referenceType'],
       referenceId: json['reference_id']?.toString() ?? json['referenceId']?.toString(),
       notes: json['notes'],

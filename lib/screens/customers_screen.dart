@@ -107,8 +107,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
     final name = customer['name'] ?? '';
     final code = customer['customer_code'] ?? customer['customerCode'] ?? '';
     final phone = customer['phone'] ?? '';
-    final balance = (customer['balance'] ?? 0).toDouble();
-    final debt = (customer['debt'] ?? 0).toDouble();
+    final balance = double.tryParse('${customer['balance'] ?? 0}') ?? 0;
+    final debt = double.tryParse('${customer['debt'] ?? 0}') ?? 0;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -151,8 +151,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
             _detailRow('الهاتف', c['phone'] ?? '-'),
             _detailRow('البريد', c['email'] ?? '-'),
             _detailRow('العنوان', c['address'] ?? '-'),
-            _detailRow('الرصيد', '${(c['balance'] ?? 0).toDouble().toStringAsFixed(2)} \$'),
-            _detailRow('الدين', '${(c['debt'] ?? 0).toDouble().toStringAsFixed(2)} \$'),
+            _detailRow('الرصيد', '${(double.tryParse('${c['balance'] ?? 0}') ?? 0).toStringAsFixed(2)} \$'),
+            _detailRow('الدين', '${(double.tryParse('${c['debt'] ?? 0}') ?? 0).toStringAsFixed(2)} \$'),
           ]),
         )),
       ),

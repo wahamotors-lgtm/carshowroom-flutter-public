@@ -8,6 +8,7 @@ import '../providers/auth_provider.dart';
 import '../services/account_service.dart';
 import '../services/api_service.dart';
 import '../services/data_service.dart';
+import '../utils/financial_helpers.dart';
 import '../widgets/app_drawer.dart';
 
 class AccountsScreen extends StatefulWidget {
@@ -23,6 +24,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
   List<AccountModel> _accounts = [];
   List<AccountModel> _filteredAccounts = [];
   List<String> _accountTypes = [];
+  List<Map<String, dynamic>> _journalEntries = [];
+  List<Map<String, dynamic>> _currencies = [];
+  List<Map<String, dynamic>> _exchangeRates = [];
+  FinancialHelpers? _fh;
+  Map<String, double> _jeBalances = {};
   bool _isLoading = true;
   String? _error;
   final _searchController = TextEditingController();
@@ -55,16 +61,29 @@ class _AccountsScreenState extends State<AccountsScreen> {
       final results = await Future.wait([
         _accountService.getAccounts(_token),
         _dataService.getAccountTypes(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _dataService.getJournalEntries(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _dataService.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _dataService.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       final accounts = results[0] as List<AccountModel>;
       final typesRaw = results[1] as List<Map<String, dynamic>>;
+      final journalEntries = results[2] as List<Map<String, dynamic>>;
+      final currencies = results[3] as List<Map<String, dynamic>>;
+      final exchangeRates = results[4] as List<Map<String, dynamic>>;
       debugPrint('Accounts loaded: ${accounts.length}');
-      for (final a in accounts.take(3)) {
-        debugPrint('  Account: id=${a.id}, name=${a.name}, parentId=${a.parentId}, type=${a.type}');
-      }
       if (!mounted) return;
+      final fh = FinancialHelpers(
+        currencies: currencies,
+        exchangeRates: exchangeRates,
+      );
       setState(() {
         _accounts = accounts;
+        _journalEntries = journalEntries;
+        _currencies = currencies;
+        _exchangeRates = exchangeRates;
+        _fh = fh;
+        _jeBalances = fh.calculateAccountBalances(journalEntries,
+            accounts: accounts.map((a) => {'id': a.id, 'type': a.type, 'parent_id': a.parentId ?? ''}).toList());
         if (typesRaw.isNotEmpty) {
           _accountTypes = typesRaw.map((t) => (t['key'] ?? t['value'] ?? t['name'] ?? '').toString()).where((s) => s.isNotEmpty).toList();
         }
@@ -109,7 +128,18 @@ class _AccountsScreenState extends State<AccountsScreen> {
     return _filteredAccounts.any((a) => a.parentId == id);
   }
 
+  double _getAccountBalance(AccountModel account) {
+    if (_fh != null && _jeBalances.isNotEmpty) {
+      final accountsRaw = _accounts.map((a) => {'id': a.id, 'parent_id': a.parentId ?? ''}).toList();
+      return _fh!.getHierarchicalBalance(account.id, _jeBalances, accountsRaw);
+    }
+    return account.balance;
+  }
+
   double _totalWithChildren(AccountModel account) {
+    if (_fh != null && _jeBalances.isNotEmpty) {
+      return _getAccountBalance(account);
+    }
     double total = account.balance;
     for (final child in _childrenOf(account.id)) {
       total += _totalWithChildren(child);
@@ -369,14 +399,14 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _formatBalance(account.balance),
+                      _formatBalance(_jeBalances.isNotEmpty ? (_jeBalances[account.id] ?? 0) : account.balance),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: account.balance >= 0 ? AppColors.success : AppColors.error,
+                        color: (_jeBalances.isNotEmpty ? (_jeBalances[account.id] ?? 0) : account.balance) >= 0 ? AppColors.success : AppColors.error,
                       ),
                     ),
-                    if (hasChildren && totalBalance != account.balance)
+                    if (hasChildren && totalBalance != (_jeBalances.isNotEmpty ? (_jeBalances[account.id] ?? 0) : account.balance))
                       Text(
                         'الإجمالي: ${_formatBalance(totalBalance)}',
                         style: const TextStyle(
@@ -473,6 +503,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
         account: account,
         childCount: _childrenOf(account.id).length,
         totalBalance: _totalWithChildren(account),
+        computedBalance: _jeBalances.isNotEmpty ? (_jeBalances[account.id] ?? 0) : account.balance,
         onEdit: () {
           Navigator.pop(context);
           _showEditAccountDialog(account);
@@ -831,6 +862,7 @@ class _AccountDetailSheet extends StatelessWidget {
   final AccountModel account;
   final int childCount;
   final double totalBalance;
+  final double computedBalance;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -838,6 +870,7 @@ class _AccountDetailSheet extends StatelessWidget {
     required this.account,
     required this.childCount,
     required this.totalBalance,
+    required this.computedBalance,
     required this.onEdit,
     required this.onDelete,
   });
@@ -895,8 +928,8 @@ class _AccountDetailSheet extends StatelessWidget {
                   Expanded(
                     child: _InfoCard(
                       label: 'الرصيد',
-                      value: account.balance.toStringAsFixed(2),
-                      color: account.balance >= 0 ? AppColors.success : AppColors.error,
+                      value: computedBalance.toStringAsFixed(2),
+                      color: computedBalance >= 0 ? AppColors.success : AppColors.error,
                     ),
                   ),
                   const SizedBox(width: 10),

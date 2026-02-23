@@ -8,6 +8,7 @@ import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../services/data_service.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/financial_helpers.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -69,13 +70,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _ds.getContainers(_token).catchError((_) => <Map<String, dynamic>>[]),
         _ds.getMonthlyBills(_token).catchError((_) => <Map<String, dynamic>>[]),
         _ds.getRentals(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
 
       if (!mounted) return;
 
       final cars = results[0];
       final sales = results[1];
+      final expenses = results[2];
       final containers = results[3];
+      final currencies = results[6];
+      final exchangeRates = results[7];
+
+      // ── Financial helper (matching web app calculations) ──
+      final fh = FinancialHelpers(
+        currencies: currencies,
+        exchangeRates: exchangeRates,
+        expenses: expenses,
+      );
 
       // ── Bills & Rentals for alerts ──
       List<Map<String, dynamic>> alertsList = [];
@@ -107,22 +120,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // ── Active containers ──
       final activeConts = containers.where((c) => !['unloaded_syria', 'delivered'].contains(c['status'])).length;
 
-      // ── Sales calculations ──
+      // ── Sales calculations (using dynamic profit like web app) ──
+      final activeSales = sales.where((s) => s['is_cancelled'] != true && (s['is_cancelled']?.toString() ?? '') != 'true').toList();
       final today = DateTime.now().toIso8601String().split('T').first;
       final now = DateTime.now();
-      final salesToday = sales.where((s) => (s['sale_date'] ?? s['saleDate'] ?? '').toString().split('T').first == today).toList();
-      final salesMonth = sales.where((s) {
+      final salesToday = activeSales.where((s) => (s['sale_date'] ?? s['saleDate'] ?? '').toString().split('T').first == today).toList();
+      final salesMonth = activeSales.where((s) {
         final d = DateTime.tryParse((s['sale_date'] ?? s['saleDate'] ?? '').toString());
         return d != null && d.month == now.month && d.year == now.year;
       }).toList();
 
-      double calcProfit(Map<String, dynamic> s) {
-        final salePrice = _pd(s['sale_price'] ?? s['selling_price'] ?? s['sellingPrice'] ?? s['salePrice']);
-        final purchasePrice = _pd(s['purchase_price'] ?? s['purchasePrice'] ?? s['cost']);
-        return salePrice - purchasePrice;
-      }
+      double calcProfit(Map<String, dynamic> s) => fh.getSaleDynamicProfit(s, cars);
 
-      final profitAll = sales.fold<double>(0, (sum, s) => sum + calcProfit(s));
+      final profitAll = activeSales.fold<double>(0, (sum, s) => sum + calcProfit(s));
       final profitTodayVal = salesToday.fold<double>(0, (sum, s) => sum + calcProfit(s));
       final profitMonthVal = salesMonth.fold<double>(0, (sum, s) => sum + calcProfit(s));
 
@@ -130,7 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       List<_MonthData> monthly = [];
       for (int i = 5; i >= 0; i--) {
         final m = DateTime(now.year, now.month - i, 1);
-        final mSales = sales.where((s) {
+        final mSales = activeSales.where((s) {
           final d = DateTime.tryParse((s['sale_date'] ?? s['saleDate'] ?? '').toString());
           return d != null && d.month == m.month && d.year == m.year;
         }).toList();
@@ -152,6 +162,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _StatusSlice('مباعة', sold.length, const Color(0xFF6B7280)),
       ];
 
+      // ── Add total cost to ready cars for display ──
+      final readyCarsWithCost = inShowroom.take(5).map((car) {
+        return {...car, '_totalCost': fh.calculateCarTotalCost(car)};
+      }).toList();
+
+      // ── Add dynamic profit to recent sales ──
+      var sortedSales = activeSales.toList()
+        ..sort((a, b) => (b['sale_date'] ?? b['saleDate'] ?? '').toString().compareTo((a['sale_date'] ?? a['saleDate'] ?? '').toString()));
+      final recentWithProfit = sortedSales.take(5).map((s) {
+        return {...s, '_profit': fh.getSaleDynamicProfit(s, cars), '_salePriceUSD': fh.getSalePriceInUSD(s)};
+      }).toList();
+
       setState(() {
         _totalCars = cars.length;
         _carsInKorea = inKorea.length;
@@ -166,10 +188,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _profitThisMonth = profitMonthVal;
         _monthlyData = monthly;
         _statusSlices = slices;
-        _readyCars = inShowroom.take(5).toList();
-        _recentSales = sales.toList()
-          ..sort((a, b) => (b['sale_date'] ?? b['saleDate'] ?? '').toString().compareTo((a['sale_date'] ?? a['saleDate'] ?? '').toString()));
-        _recentSales = _recentSales.take(5).toList();
+        _readyCars = readyCarsWithCost;
+        _recentSales = recentWithProfit;
         _alerts = alertsList.take(5).toList();
         _isLoading = false;
       });
@@ -493,7 +513,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final vin = car['vin'] ?? '';
               final year = car['year'] ?? '';
               final color = car['color'] ?? '';
-              final cost = _pd(car['purchase_price'] ?? car['purchasePrice'] ?? car['selling_price']);
+              final cost = _pd(car['_totalCost'] ?? car['purchase_price_usd'] ?? car['purchasePriceUSD'] ?? car['purchase_price']);
               return Container(
                 margin: const EdgeInsets.only(bottom: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -523,9 +543,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final brand = s['car_brand'] ?? s['carBrand'] ?? s['brand'] ?? s['make'] ?? '';
               final model = s['car_model'] ?? s['carModel'] ?? s['model'] ?? '';
               final buyer = s['buyer_name'] ?? s['buyerName'] ?? s['customer_name'] ?? s['customerName'] ?? '';
-              final salePrice = _pd(s['sale_price'] ?? s['selling_price'] ?? s['sellingPrice'] ?? s['salePrice']);
-              final purchasePrice = _pd(s['purchase_price'] ?? s['purchasePrice'] ?? s['cost']);
-              final profit = salePrice - purchasePrice;
+              final salePriceUSD = _pd(s['_salePriceUSD'] ?? s['sale_price_usd'] ?? s['sale_price']);
+              final profit = _pd(s['_profit']);
               return Container(
                 margin: const EdgeInsets.only(bottom: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -536,7 +555,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     if (buyer.toString().isNotEmpty) Text(buyer.toString(), style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
                   ])),
                   Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                    Text(_fmtCur(salePrice), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF8B5CF6))),
+                    Text(_fmtCur(salePriceUSD), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF8B5CF6))),
                     Text('${profit >= 0 ? '+' : ''}\$${profit.toStringAsFixed(0)}',
                         style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: profit >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444))),
                   ]),

@@ -99,6 +99,9 @@ class AppRoutes {
   // Statements
   static const String statementsPage = '/statements';
 
+  // DeepCode AI
+  static const String deepCode = '/deep-code';
+
   // Demo
   static const String demoPage = '/demo';
 

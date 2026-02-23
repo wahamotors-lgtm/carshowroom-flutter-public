@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
+import '../utils/financial_helpers.dart';
 import '../widgets/app_drawer.dart';
 
 class SalesScreen extends StatefulWidget {
@@ -20,6 +21,9 @@ class _SalesScreenState extends State<SalesScreen> {
   List<Map<String, dynamic>> _cars = [];
   List<Map<String, dynamic>> _customers = [];
   List<Map<String, dynamic>> _expenses = [];
+  List<Map<String, dynamic>> _currencies = [];
+  List<Map<String, dynamic>> _exchangeRates = [];
+  FinancialHelpers? _fh;
   bool _isLoading = true;
   String? _error;
   final _searchController = TextEditingController();
@@ -70,6 +74,8 @@ class _SalesScreenState extends State<SalesScreen> {
         _ds.getCars(_token),
         _ds.getCustomers(_token),
         _ds.getExpenses(_token),
+        _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       setState(() {
@@ -77,6 +83,13 @@ class _SalesScreenState extends State<SalesScreen> {
         _cars = results[1];
         _customers = results[2];
         _expenses = results[3];
+        _currencies = results[4];
+        _exchangeRates = results[5];
+        _fh = FinancialHelpers(
+          currencies: _currencies,
+          exchangeRates: _exchangeRates,
+          expenses: _expenses,
+        );
         _applyFilter();
         _isLoading = false;
       });
@@ -202,14 +215,14 @@ class _SalesScreenState extends State<SalesScreen> {
   double _getCarCost(Map<String, dynamic> sale) {
     final car = _getCarData(sale);
     if (car == null) return 0;
+    if (_fh != null) return _fh!.calculateCarTotalCost(car);
+    // Fallback without FinancialHelpers
     double cost = 0;
     cost += _parseDouble(car['purchase_price'] ?? car['purchasePrice'] ?? car['cost'] ?? 0);
     cost += _parseDouble(car['shipping_cost'] ?? car['shippingCost'] ?? 0);
     cost += _parseDouble(car['customs_cost'] ?? car['customsCost'] ?? 0);
     cost += _parseDouble(car['handling_cost'] ?? car['handlingCost'] ?? 0);
     cost += _parseDouble(car['other_costs'] ?? car['otherCosts'] ?? 0);
-
-    // Add expenses linked to this car
     final carId = sale['car_id']?.toString();
     if (carId != null) {
       for (final exp in _expenses) {
@@ -228,6 +241,11 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   double _getSalePrice(Map<String, dynamic> sale) {
+    // Return sale price in USD using FinancialHelpers
+    if (_fh != null) {
+      final usd = _fh!.getSalePriceInUSD(sale);
+      if (usd > 0) return usd;
+    }
     return _parseDouble(sale['sale_price'] ??
         sale['selling_price'] ??
         sale['sellingPrice'] ??
@@ -288,11 +306,15 @@ class _SalesScreenState extends State<SalesScreen> {
     final activeSales = _sales.where((s) => !_isCancelled(s)).toList();
     double totalRevenue = 0;
     double totalCost = 0;
+    double totalProfit = 0;
     for (final s in activeSales) {
-      totalRevenue += _getSalePrice(s);
-      totalCost += _getCarCost(s);
+      final salePriceUSD = _fh != null ? _fh!.getSalePriceInUSD(s) : _getSalePrice(s);
+      final carCost = _getCarCost(s);
+      final profit = _fh != null ? _fh!.getSaleDynamicProfit(s, _cars) : (salePriceUSD - carCost);
+      totalRevenue += salePriceUSD;
+      totalCost += carCost;
+      totalProfit += profit;
     }
-    final totalProfit = totalRevenue - totalCost;
     return {
       'count': activeSales.length,
       'revenue': totalRevenue,
@@ -547,11 +569,10 @@ class _SalesScreenState extends State<SalesScreen> {
     final customerName = _customerDisplayName(sale);
     final carInfo = _carDisplayInfo(sale);
     final vin = _getCarVin(sale);
-    final salePrice = _getSalePrice(sale);
+    final salePriceUSD = _fh != null ? _fh!.getSalePriceInUSD(sale) : _getSalePrice(sale);
     final cost = _getCarCost(sale);
-    final profit = salePrice - cost;
+    final profit = _fh != null ? _fh!.getSaleDynamicProfit(sale, _cars) : (salePriceUSD - cost);
     final date = sale['sale_date'] ?? sale['date'] ?? sale['created_at'] ?? '';
-    final currency = (sale['currency'] ?? 'USD').toString();
     final notes = sale['notes'] ?? '';
     final paymentMethod = (sale['payment_method'] ?? '').toString();
     final cancelled = _isCancelled(sale);
@@ -684,11 +705,11 @@ class _SalesScreenState extends State<SalesScreen> {
                 // Price/Cost/Profit row
                 Row(
                   children: [
-                    // Sale price
+                    // Sale price (in USD)
                     Expanded(
                       child: _miniStat(
                         'سعر البيع',
-                        '$salePrice $currency',
+                        _formatAmount(salePriceUSD),
                         cancelled ? AppColors.textMuted : AppColors.primary,
                       ),
                     ),
@@ -813,9 +834,9 @@ class _SalesScreenState extends State<SalesScreen> {
     final customerPhone = _customerPhone(sale);
     final carInfo = _carDisplayInfo(sale);
     final vin = _getCarVin(sale);
-    final salePrice = _getSalePrice(sale);
+    final salePriceUSD = _fh != null ? _fh!.getSalePriceInUSD(sale) : _getSalePrice(sale);
     final cost = _getCarCost(sale);
-    final profit = salePrice - cost;
+    final profit = _fh != null ? _fh!.getSaleDynamicProfit(sale, _cars) : (salePriceUSD - cost);
     final date = sale['sale_date'] ?? sale['date'] ?? sale['created_at'] ?? '';
     final currency = (sale['currency'] ?? 'USD').toString();
     final notes = sale['notes'] ?? '';
@@ -912,7 +933,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                   fontSize: 11, color: AppColors.textGray)),
                           const SizedBox(height: 4),
                           Text(
-                            '$salePrice $currency',
+                            _formatAmount(salePriceUSD),
                             style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,

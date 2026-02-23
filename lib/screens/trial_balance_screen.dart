@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/financial_helpers.dart';
 
 class TrialBalanceScreen extends StatefulWidget {
   const TrialBalanceScreen({super.key});
@@ -18,6 +19,11 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
   late final DataService _ds;
   List<Map<String, dynamic>> _accounts = [];
   List<Map<String, dynamic>> _filtered = [];
+  List<Map<String, dynamic>> _journalEntries = [];
+  List<Map<String, dynamic>> _currencies = [];
+  List<Map<String, dynamic>> _exchangeRates = [];
+  FinancialHelpers? _fh;
+  Map<String, double> _jeBalances = {};
   bool _isLoading = true;
   String? _error;
   final _searchController = TextEditingController();
@@ -44,10 +50,29 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
       _error = null;
     });
     try {
-      final accounts = await _ds.getAccounts(_token);
+      final results = await Future.wait([
+        _ds.getAccounts(_token),
+        _ds.getJournalEntries(_token),
+        _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
+      ]);
       if (!mounted) return;
+      final accounts = results[0];
+      final journalEntries = results[1];
+      final currencies = results[2];
+      final exchangeRates = results[3];
+      final fh = FinancialHelpers(
+        currencies: currencies,
+        exchangeRates: exchangeRates,
+      );
+      final jeBalances = fh.calculateAccountBalances(journalEntries, accounts: accounts);
       setState(() {
         _accounts = accounts;
+        _journalEntries = journalEntries;
+        _currencies = currencies;
+        _exchangeRates = exchangeRates;
+        _fh = fh;
+        _jeBalances = jeBalances;
         _applyFilter();
         _isLoading = false;
       });
@@ -93,8 +118,16 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
     return debitTypes.contains(type.toLowerCase());
   }
 
+  double _getAccountBalance(Map<String, dynamic> account) {
+    final id = (account['id'] ?? '').toString();
+    if (_fh != null && _jeBalances.isNotEmpty) {
+      return _fh!.getHierarchicalBalance(id, _jeBalances, _accounts);
+    }
+    return double.tryParse('${account['balance'] ?? 0}') ?? 0;
+  }
+
   double _getDebit(Map<String, dynamic> account) {
-    final balance = (double.tryParse('${account['balance'] ?? 0}') ?? 0);
+    final balance = _getAccountBalance(account);
     final type = (account['type'] ?? '').toString();
     if (_isDebitAccount(type)) {
       return balance >= 0 ? balance : 0;
@@ -104,7 +137,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
   }
 
   double _getCredit(Map<String, dynamic> account) {
-    final balance = (double.tryParse('${account['balance'] ?? 0}') ?? 0);
+    final balance = _getAccountBalance(account);
     final type = (account['type'] ?? '').toString();
     if (_isDebitAccount(type)) {
       return balance < 0 ? balance.abs() : 0;
@@ -134,7 +167,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
     for (final a in _accounts) {
       final type = (a['type'] ?? '').toString().toLowerCase();
       if (types.contains(type)) {
-        total += double.tryParse('${a['balance'] ?? 0}') ?? 0;
+        total += _getAccountBalance(a);
       }
     }
     return total;
@@ -734,7 +767,7 @@ class _TrialBalanceScreenState extends State<TrialBalanceScreen> {
     final name = account['name_ar'] ?? account['name'] ?? '';
     final nameEn = account['name'] ?? '';
     final type = (account['type'] ?? '').toString();
-    final balance = (double.tryParse('${account['balance'] ?? 0}') ?? 0);
+    final balance = _getAccountBalance(account);
     final code = account['code'] ?? '';
     final currency = account['currency'] ?? '';
     final description = account['description'] ?? '';

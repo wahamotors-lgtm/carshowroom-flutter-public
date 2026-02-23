@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
+import '../utils/financial_helpers.dart';
 import '../widgets/app_drawer.dart';
 
 class CarPricingScreen extends StatefulWidget {
@@ -18,6 +19,9 @@ class _CarPricingScreenState extends State<CarPricingScreen> {
   List<Map<String, dynamic>> _cars = [];
   List<Map<String, dynamic>> _expenses = [];
   List<Map<String, dynamic>> _filtered = [];
+  List<Map<String, dynamic>> _currencies = [];
+  List<Map<String, dynamic>> _exchangeRates = [];
+  FinancialHelpers? _fh;
   bool _isLoading = true;
   String? _error;
   final _searchController = TextEditingController();
@@ -43,11 +47,20 @@ class _CarPricingScreenState extends State<CarPricingScreen> {
       final results = await Future.wait([
         _ds.getCars(_token),
         _ds.getExpenses(_token),
+        _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       setState(() {
         _cars = results[0];
         _expenses = results[1];
+        _currencies = results[2];
+        _exchangeRates = results[3];
+        _fh = FinancialHelpers(
+          currencies: _currencies,
+          exchangeRates: _exchangeRates,
+          expenses: _expenses,
+        );
         _applyFilter();
         _isLoading = false;
       });
@@ -115,6 +128,7 @@ class _CarPricingScreenState extends State<CarPricingScreen> {
   }
 
   double _getCarTotalCost(Map<String, dynamic> car) {
+    if (_fh != null) return _fh!.calculateCarTotalCost(car);
     return _getCarPurchasePrice(car) +
         _getCarShippingCost(car) +
         _getCarCustomsCost(car) +

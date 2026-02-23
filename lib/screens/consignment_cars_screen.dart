@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/financial_helpers.dart';
 
 class ConsignmentCarsScreen extends StatefulWidget {
   const ConsignmentCarsScreen({super.key});
@@ -22,6 +23,8 @@ class _ConsignmentCarsScreenState extends State<ConsignmentCarsScreen> with Sing
   List<Map<String, dynamic>> _sales = [];
   List<Map<String, dynamic>> _accounts = [];
   List<Map<String, dynamic>> _currencies = [];
+  List<Map<String, dynamic>> _exchangeRates = [];
+  FinancialHelpers? _fh;
   bool _isLoading = true;
   String? _error;
   final _searchController = TextEditingController();
@@ -91,6 +94,7 @@ class _ConsignmentCarsScreenState extends State<ConsignmentCarsScreen> with Sing
         _ds.getConsignmentSales(_token),
         _ds.getAccounts(_token),
         _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       setState(() {
@@ -98,6 +102,8 @@ class _ConsignmentCarsScreenState extends State<ConsignmentCarsScreen> with Sing
         _sales = results[1];
         _accounts = results[2];
         _currencies = results[3];
+        _exchangeRates = results[4];
+        _fh = FinancialHelpers(currencies: _currencies, exchangeRates: _exchangeRates);
         _isLoading = false;
       });
     } catch (e) {
@@ -125,15 +131,10 @@ class _ConsignmentCarsScreenState extends State<ConsignmentCarsScreen> with Sing
       _accounts.where((a) => (a['type'] ?? '').toString() == 'revenue').toList();
 
   double _convertToUSD(double amount, String currency) {
+    if (_fh != null) return _fh!.convertToUSD(amount, currency);
     if (currency == 'USD') return amount;
-    for (final c in _currencies) {
-      if ((c['code'] ?? '').toString() == currency) {
-        final rate = double.tryParse((c['rate_to_usd'] ?? c['rateToUSD'] ?? '0').toString());
-        if (rate != null && rate > 0) return (amount * rate * 100).roundToDouble() / 100;
-      }
-    }
-    if (currency == 'AED') return (amount / 3.67 * 100).roundToDouble() / 100;
-    if (currency == 'KRW') return (amount * 0.00075 * 100).roundToDouble() / 100;
+    if (currency == 'AED') return amount / 3.67;
+    if (currency == 'KRW') return amount / 1333;
     return amount;
   }
 

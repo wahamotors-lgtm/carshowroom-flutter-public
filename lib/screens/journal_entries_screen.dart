@@ -7,6 +7,7 @@ import '../models/journal_entry_model.dart';
 import '../providers/auth_provider.dart';
 import '../services/account_service.dart';
 import '../services/api_service.dart';
+import '../utils/account_validator.dart';
 import '../widgets/app_drawer.dart';
 
 // Reference type options with Arabic labels and colors
@@ -687,6 +688,54 @@ class _JournalEntriesScreenState extends State<JournalEntriesScreen> {
                     ),
                   );
                   return;
+                }
+                // التحقق الذكي من نوع الحساب
+                final debitAccount = _accounts.firstWhere((a) => a.id == debitAccountId);
+                final warning = AccountValidator.validateDebitAccount(
+                  debitAccount: debitAccount,
+                  description: descController.text.trim(),
+                  referenceType: referenceType,
+                  allAccounts: _accounts,
+                );
+                if (warning != null) {
+                  final action = await showDialog<String>(
+                    context: ctx,
+                    builder: (warnCtx) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.orange[700], size: 28),
+                          const SizedBox(width: 8),
+                          const Expanded(child: Text('\u062a\u0646\u0628\u064a\u0647 \u0627\u0644\u062d\u0633\u0627\u0628', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+                        ],
+                      ),
+                      content: Text(warning.message, style: const TextStyle(fontSize: 14, height: 1.5)),
+                      actionsAlignment: MainAxisAlignment.center,
+                      actions: [
+                        if (warning.suggestedAccountId != null)
+                          ElevatedButton.icon(
+                            onPressed: () => Navigator.pop(warnCtx, 'fix'),
+                            icon: const Icon(Icons.check_circle, size: 18),
+                            label: Text('\u062a\u063a\u064a\u064a\u0631 \u0644\u0640 ${warning.suggestedAccountName ?? "\u0627\u0644\u062d\u0633\u0627\u0628 \u0627\u0644\u0635\u062d\u064a\u062d"}', style: const TextStyle(fontSize: 12)),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                          ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(warnCtx, 'continue'),
+                          child: const Text('\u0645\u062a\u0627\u0628\u0639\u0629 \u0639\u0644\u0649 \u0623\u064a \u062d\u0627\u0644', style: TextStyle(color: AppColors.textMuted)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(warnCtx, 'cancel'),
+                          child: const Text('\u0625\u0644\u063a\u0627\u0621', style: TextStyle(color: AppColors.error)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (action == 'fix' && warning.suggestedAccountId != null) {
+                    setDialogState(() => debitAccountId = warning.suggestedAccountId);
+                    return; // يرجع للنموذج مع الحساب الصحيح
+                  } else if (action != 'continue') {
+                    return; // إلغاء
+                  }
                 }
                 Navigator.pop(ctx);
                 await _createEntry(

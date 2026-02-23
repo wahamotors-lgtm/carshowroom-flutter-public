@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
+import '../utils/account_validator.dart';
 import '../widgets/app_drawer.dart';
 
 // ── Category helpers ──
@@ -163,6 +164,56 @@ class _BulkExpenseScreenState extends State<BulkExpenseScreen> {
     if (validRows.isEmpty) {
       _showError('أضف مصروف واحد على الأقل');
       return;
+    }
+
+    // التحقق الذكي من توافق الوصف مع التصنيف
+    final warnings = <String>[];
+    for (int i = 0; i < validRows.length; i++) {
+      final w = AccountValidator.validateCategory(
+        description: validRows[i]['description']!,
+        category: _sharedCategory,
+      );
+      if (w != null) warnings.add('سطر ${i + 1}: ${validRows[i]['description']}');
+    }
+    if (warnings.isNotEmpty) {
+      final action = await showDialog<String>(
+        context: context,
+        builder: (warnCtx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange[700], size: 28),
+            const SizedBox(width: 8),
+            const Expanded(child: Text('تنبيه التصنيف', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+          ]),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text(
+              'بعض المصاريف قد لا تتوافق مع التصنيف "${_categoryLabels[_sharedCategory] ?? _sharedCategory}":',
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 8),
+            ...warnings.map((w) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(children: [
+                const Icon(Icons.info_outline, size: 16, color: AppColors.textMuted),
+                const SizedBox(width: 6),
+                Expanded(child: Text(w, style: const TextStyle(fontSize: 13))),
+              ]),
+            )),
+          ]),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(warnCtx, 'continue'),
+              child: const Text('متابعة على أي حال'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(warnCtx, 'cancel'),
+              child: const Text('تعديل التصنيف', style: TextStyle(color: AppColors.error)),
+            ),
+          ],
+        ),
+      );
+      if (action != 'continue') return;
     }
 
     // Confirmation dialog

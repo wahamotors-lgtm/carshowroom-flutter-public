@@ -227,6 +227,17 @@ class DataService {
   Future<List<Map<String, dynamic>>> getActivityLogs(String token) =>
       _getList(ApiConfig.activityLogs, token);
 
+  // ── Journal Entries ──
+
+  Future<List<Map<String, dynamic>>> getJournalEntries(String token) =>
+      _getList(ApiConfig.journalEntries, token);
+
+  Future<Map<String, dynamic>> createJournalEntry(String token, Map<String, dynamic> body) =>
+      _api.post(ApiConfig.journalEntries, body, token: token);
+
+  Future<Map<String, dynamic>> deleteJournalEntry(String token, String id) =>
+      _api.delete('${ApiConfig.journalEntries}/$id', token: token);
+
   // ── Accounts (for dropdowns) ──
 
   Future<List<Map<String, dynamic>>> getAccounts(String token) =>

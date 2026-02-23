@@ -7,6 +7,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
+import '../utils/financial_helpers.dart';
 import '../widgets/app_drawer.dart';
 
 class MarketResearchScreen extends StatefulWidget {
@@ -23,6 +24,8 @@ class _MarketResearchScreenState extends State<MarketResearchScreen> {
   // Data
   List<Map<String, dynamic>> _cars = [];
   List<Map<String, dynamic>> _sales = [];
+  List<Map<String, dynamic>> _expenses = [];
+  FinancialHelpers? _fh;
 
   // Computed stats
   int _totalSales = 0;
@@ -62,12 +65,24 @@ class _MarketResearchScreenState extends State<MarketResearchScreen> {
       final results = await Future.wait([
         _ds.getCars(_token).catchError((_) => <Map<String, dynamic>>[]),
         _ds.getSales(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExpenses(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
 
       if (!mounted) return;
 
       final cars = results[0] as List<Map<String, dynamic>>;
       final sales = results[1] as List<Map<String, dynamic>>;
+      final expenses = results[2] as List<Map<String, dynamic>>;
+      final currencies = results[3] as List<Map<String, dynamic>>;
+      final exchangeRates = results[4] as List<Map<String, dynamic>>;
+
+      final fh = FinancialHelpers(
+        currencies: currencies,
+        exchangeRates: exchangeRates,
+        expenses: expenses,
+      );
 
       // Calculate stats by make
       final makeMap = <String, _MakeStats>{};
@@ -96,14 +111,16 @@ class _MarketResearchScreenState extends State<MarketResearchScreen> {
       double totalProfitMarginSum = 0;
 
       for (final sale in sales) {
-        final salePrice = _pd(sale['sale_price'] ?? sale['selling_price'] ?? sale['sellingPrice'] ?? sale['salePrice']);
-        final purchasePrice = _pd(sale['purchase_price'] ?? sale['purchasePrice'] ?? sale['cost']);
+        final salePrice = fh.getSalePriceInUSD(sale);
+        final profit = fh.getSaleDynamicProfit(sale, cars);
         totalRevenue += salePrice;
-        final profit = salePrice - purchasePrice;
         totalProfit += profit;
 
-        if (salePrice > 0 && purchasePrice > 0) {
-          totalProfitMarginSum += ((profit / purchasePrice) * 100);
+        final carId = (sale['car_id'] ?? sale['carId'])?.toString();
+        final car = carId != null ? cars.where((c) => (c['id']?.toString()) == carId).firstOrNull : null;
+        final totalCost = car != null ? fh.calculateCarTotalCost(car) : 0.0;
+        if (salePrice > 0 && totalCost > 0) {
+          totalProfitMarginSum += ((profit / totalCost) * 100);
           salesWithProfit++;
         }
 
@@ -121,6 +138,8 @@ class _MarketResearchScreenState extends State<MarketResearchScreen> {
       setState(() {
         _cars = cars;
         _sales = sales;
+        _expenses = expenses;
+        _fh = fh;
         _totalSales = sales.length;
         _totalRevenue = totalRevenue;
         _totalProfit = totalProfit;
@@ -143,7 +162,7 @@ class _MarketResearchScreenState extends State<MarketResearchScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      drawer: const AppDrawer(currentRoute: AppRoutes.dashboard),
+      drawer: const AppDrawer(currentRoute: AppRoutes.marketResearch),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null

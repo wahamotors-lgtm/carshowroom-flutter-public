@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../services/account_service.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
+import '../utils/account_validator.dart';
 import '../widgets/app_drawer.dart';
 
 // ── Category helpers ──
@@ -379,6 +380,53 @@ class _ExpenseRecordScreenState extends State<ExpenseRecordScreen> {
             ElevatedButton(
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
+                // التحقق الذكي من نوع الحساب
+                if (debitAccountId != null) {
+                  final debitAccount = _accounts.firstWhere((a) => a.id == debitAccountId);
+                  final warning = AccountValidator.validateDebitAccount(
+                    debitAccount: debitAccount,
+                    description: descController.text.trim(),
+                    allAccounts: _accounts,
+                  );
+                  if (warning != null) {
+                    final action = await showDialog<String>(
+                      context: ctx,
+                      builder: (warnCtx) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        title: Row(children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.orange[700], size: 28),
+                          const SizedBox(width: 8),
+                          const Expanded(child: Text('تنبيه الحساب', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
+                        ]),
+                        content: Text(warning.message, style: const TextStyle(fontSize: 14, height: 1.5)),
+                        actionsAlignment: MainAxisAlignment.center,
+                        actions: [
+                          if (warning.suggestedAccountId != null)
+                            ElevatedButton.icon(
+                              onPressed: () => Navigator.pop(warnCtx, 'fix'),
+                              icon: const Icon(Icons.check_circle, size: 18),
+                              label: Text('تغيير لـ ${warning.suggestedAccountName ?? "الحساب الصحيح"}', style: const TextStyle(fontSize: 12)),
+                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.success, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                            ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(warnCtx, 'continue'),
+                            child: const Text('متابعة على أي حال', style: TextStyle(color: AppColors.textMuted)),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(warnCtx, 'cancel'),
+                            child: const Text('إلغاء', style: TextStyle(color: AppColors.error)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (action == 'fix' && warning.suggestedAccountId != null) {
+                      setDialogState(() => debitAccountId = warning.suggestedAccountId);
+                      return;
+                    } else if (action != 'continue') {
+                      return;
+                    }
+                  }
+                }
                 Navigator.pop(ctx);
                 final dateStr = '${expenseDate.year}-${expenseDate.month.toString().padLeft(2, '0')}-${expenseDate.day.toString().padLeft(2, '0')}';
                 try {

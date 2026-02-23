@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
+import '../utils/financial_helpers.dart';
 import '../widgets/app_drawer.dart';
 
 // ── Category helpers ──
@@ -61,6 +62,7 @@ class _ContainerExpensesScreenState extends State<ContainerExpensesScreen> {
   List<Map<String, dynamic>> _allExpenses = [];
   List<Map<String, dynamic>> _containers = [];
   List<Map<String, dynamic>> _filtered = [];
+  FinancialHelpers? _fh;
   bool _isLoading = true;
   String? _error;
   String? _selectedContainerId;
@@ -84,11 +86,18 @@ class _ContainerExpensesScreenState extends State<ContainerExpensesScreen> {
       final results = await Future.wait([
         _dataService.getExpenses(_token),
         _dataService.getContainers(_token),
+        _dataService.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _dataService.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       setState(() {
         _allExpenses = results[0] as List<Map<String, dynamic>>;
         _containers = results[1] as List<Map<String, dynamic>>;
+        _fh = FinancialHelpers(
+          currencies: results[2] as List<Map<String, dynamic>>,
+          exchangeRates: results[3] as List<Map<String, dynamic>>,
+          expenses: _allExpenses,
+        );
         _applyFilter();
         _isLoading = false;
       });
@@ -127,7 +136,13 @@ class _ContainerExpensesScreenState extends State<ContainerExpensesScreen> {
   double _totalForSelected() {
     double total = 0;
     for (final exp in _filtered) {
-      total += double.tryParse('${exp['amount'] ?? 0}') ?? 0;
+      final amount = double.tryParse('${exp['amount'] ?? 0}') ?? 0;
+      final currency = (exp['currency'] ?? 'USD').toString();
+      if (_fh != null) {
+        total += _fh!.convertToUSD(amount, currency);
+      } else {
+        total += amount;
+      }
     }
     return total;
   }

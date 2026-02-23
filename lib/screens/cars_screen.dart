@@ -6,6 +6,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
+import '../utils/financial_helpers.dart';
 import '../widgets/app_drawer.dart';
 
 class CarsScreen extends StatefulWidget {
@@ -33,6 +34,9 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
   List<Map<String, dynamic>> _customers = [];
   List<Map<String, dynamic>> _expenses = [];
   List<Map<String, dynamic>> _sales = [];
+  List<Map<String, dynamic>> _currenciesData = [];
+  List<Map<String, dynamic>> _exchangeRates = [];
+  FinancialHelpers? _fh;
 
   // Status maps
   static const Map<String, String> _statusLabels = {
@@ -115,6 +119,8 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
         _ds.getCustomers(_token).catchError((_) => <Map<String, dynamic>>[]),
         _ds.getExpenses(_token).catchError((_) => <Map<String, dynamic>>[]),
         _ds.getSales(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       setState(() {
@@ -126,6 +132,13 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
         _customers = results[5];
         _expenses = results[6];
         _sales = results[7];
+        _currenciesData = results[8];
+        _exchangeRates = results[9];
+        _fh = FinancialHelpers(
+          currencies: _currenciesData,
+          exchangeRates: _exchangeRates,
+          expenses: _expenses,
+        );
         _applyFilter();
         _isLoading = false;
       });
@@ -224,6 +237,7 @@ class _CarsScreenState extends State<CarsScreen> with SingleTickerProviderStateM
   }
 
   double _getCarTotalCost(Map<String, dynamic> car) {
+    if (_fh != null) return _fh!.calculateCarTotalCost(car);
     final purchasePrice = double.tryParse((car['purchase_price'] ?? car['purchasePrice'] ?? '0').toString()) ?? 0;
     return purchasePrice + _getCarTotalExpenses(car);
   }

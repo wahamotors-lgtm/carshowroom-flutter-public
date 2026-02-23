@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../services/data_service.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/financial_helpers.dart';
 
 class StatementsScreen extends StatefulWidget {
   const StatementsScreen({super.key});
@@ -23,6 +24,10 @@ class _StatementsScreenState extends State<StatementsScreen>
   List<Map<String, dynamic>> _expenses = [];
   List<Map<String, dynamic>> _cars = [];
   List<Map<String, dynamic>> _sales = [];
+  List<Map<String, dynamic>> _journalEntries = [];
+  List<Map<String, dynamic>> _currencies = [];
+  List<Map<String, dynamic>> _exchangeRates = [];
+  FinancialHelpers? _fh;
   bool _isLoading = true;
   String? _error;
 
@@ -54,6 +59,9 @@ class _StatementsScreenState extends State<StatementsScreen>
         _ds.getExpenses(_token),
         _ds.getCars(_token),
         _ds.getSales(_token),
+        _ds.getJournalEntries(_token),
+        _ds.getCurrencies(_token).catchError((_) => <Map<String, dynamic>>[]),
+        _ds.getExchangeRateHistory(_token).catchError((_) => <Map<String, dynamic>>[]),
       ]);
       if (!mounted) return;
       setState(() {
@@ -61,6 +69,14 @@ class _StatementsScreenState extends State<StatementsScreen>
         _expenses = results[1];
         _cars = results[2];
         _sales = results[3];
+        _journalEntries = results[4];
+        _currencies = results[5];
+        _exchangeRates = results[6];
+        _fh = FinancialHelpers(
+          currencies: _currencies,
+          exchangeRates: _exchangeRates,
+          expenses: _expenses,
+        );
         _isLoading = false;
       });
     } catch (e) {
@@ -137,12 +153,26 @@ class _StatementsScreenState extends State<StatementsScreen>
     return assetTypes.contains(type.toLowerCase());
   }
 
+  Map<String, double> get _accountBalancesFromJE {
+    if (_fh == null) return {};
+    return _fh!.calculateAccountBalances(_journalEntries, accounts: _accounts);
+  }
+
+  double _getAccountBalance(Map<String, dynamic> account) {
+    final balances = _accountBalancesFromJE;
+    final id = (account['id'] ?? '').toString();
+    if (balances.containsKey(id) && _fh != null) {
+      return _fh!.getHierarchicalBalance(id, balances, _accounts);
+    }
+    return _parseDouble(account['balance']);
+  }
+
   double _sumAccountsByTypes(List<String> types) {
     double total = 0;
     for (final a in _accounts) {
       final type = (a['type'] ?? '').toString().toLowerCase();
       if (types.contains(type)) {
-        total += _parseDouble(a['balance']);
+        total += _getAccountBalance(a);
       }
     }
     return total;
@@ -216,7 +246,9 @@ class _StatementsScreenState extends State<StatementsScreen>
   double get _totalExpensesAmount {
     double total = 0;
     for (final e in _expenses) {
-      total += _parseDouble(e['amount']);
+      final amount = _parseDouble(e['amount']);
+      final currency = (e['currency'] ?? 'USD').toString();
+      total += _fh != null ? _fh!.convertToUSD(amount, currency) : amount;
     }
     return total;
   }
@@ -273,8 +305,10 @@ class _StatementsScreenState extends State<StatementsScreen>
   }
 
   double _carValue(Map<String, dynamic> car) {
-    return _parseDouble(car['purchase_price'] ??
-        car['purchasePrice'] ??
+    if (_fh != null) return _fh!.calculateCarTotalCost(car);
+    return _parseDouble(car['purchase_price_usd'] ??
+        car['purchasePriceUSD'] ??
+        car['purchase_price'] ??
         car['price'] ??
         car['cost'] ??
         0);
@@ -520,7 +554,7 @@ class _StatementsScreenState extends State<StatementsScreen>
   Widget _buildAccountCard(Map<String, dynamic> account) {
     final name = (account['name_ar'] ?? account['name'] ?? '').toString();
     final type = (account['type'] ?? '').toString();
-    final balance = _parseDouble(account['balance']);
+    final balance = _getAccountBalance(account);
     final currency = (account['currency'] ?? '').toString();
 
     return Container(
